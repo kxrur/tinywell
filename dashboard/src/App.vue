@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import { invoke } from "@tauri-apps/api/core";
+import { Button } from "@/components/ui/button";
 
 const greetMsg = ref("");
 const name = ref("");
@@ -34,6 +35,7 @@ async function greet() {
     </form>
     <p>{{ greetMsg }}</p>
   </main>
+  <Button>shadcn button</Button>
 </template>
 
 <style scoped>
