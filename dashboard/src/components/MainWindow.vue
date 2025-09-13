@@ -1,6 +1,7 @@
 <template>
     <div>
         Hello world
+        <NodeCanvas></NodeCanvas>
     </div>
 </template>
 
