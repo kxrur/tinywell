@@ -2,13 +2,17 @@
 </script>
 
 <template>
-    <div>
+    <div class="w-full h-screen">
         <SidebarProvider>
-            <NavBar></NavBar>
-            <main>
-                <SidebarTrigger />
-                <MainWindow></MainWindow>
-            </main>
+            <div class="flex w-full h-full">
+                <NavBar />
+                <main class="flex-1 w-full">
+                    <div class="w-full">
+                        <SidebarTrigger />
+                        <MainWindow />
+                    </div>
+                </main>
+            </div>
         </SidebarProvider>
     </div>
 </template>

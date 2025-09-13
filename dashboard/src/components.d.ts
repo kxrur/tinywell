@@ -31,6 +31,7 @@ declare module 'vue' {
     MainWindow: typeof import('./components/MainWindow.vue')['default']
     NavBar: typeof import('./components/Navigation/NavBar.vue')['default']
     NodeCanvas: typeof import('./components/PresetControls/NodeCanvas.vue')['default']
+    PumpControls: typeof import('./components/PumpControls/PumpControls.vue')['default']
     Select: typeof import('./components/ui/select/Select.vue')['default']
     SelectContent: typeof import('./components/ui/select/SelectContent.vue')['default']
     SelectGroup: typeof import('./components/ui/select/SelectGroup.vue')['default']
@@ -42,6 +43,7 @@ declare module 'vue' {
     SelectSeparator: typeof import('./components/ui/select/SelectSeparator.vue')['default']
     SelectTrigger: typeof import('./components/ui/select/SelectTrigger.vue')['default']
     SelectValue: typeof import('./components/ui/select/SelectValue.vue')['default']
+    SensorsMonitor: typeof import('./components/Sensors/SensorsMonitor.vue')['default']
     Separator: typeof import('./components/ui/separator/Separator.vue')['default']
     Sheet: typeof import('./components/ui/sheet/Sheet.vue')['default']
     SheetClose: typeof import('./components/ui/sheet/SheetClose.vue')['default']
@@ -83,6 +85,7 @@ declare module 'vue' {
     TooltipContent: typeof import('./components/ui/tooltip/TooltipContent.vue')['default']
     TooltipProvider: typeof import('./components/ui/tooltip/TooltipProvider.vue')['default']
     TooltipTrigger: typeof import('./components/ui/tooltip/TooltipTrigger.vue')['default']
+    ValveControl: typeof import('./components/ValveControls/ValveControl.vue')['default']
     WavelengthSlider: typeof import('./components/PresetControls/Helpers/WavelengthSlider.vue')['default']
   }
 }
