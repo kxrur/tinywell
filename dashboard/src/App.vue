@@ -2,7 +2,13 @@
 </script>
 
 <template>
-<div> Hello world 
-    <Button>heh</Button>
-</div>
+    <div>
+        <SidebarProvider>
+            <NavBar></NavBar>
+            <main>
+                <SidebarTrigger />
+                <MainWindow></MainWindow>
+            </main>
+        </SidebarProvider>
+    </div>
 </template>
