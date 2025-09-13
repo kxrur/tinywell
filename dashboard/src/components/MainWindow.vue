@@ -13,6 +13,7 @@
 
         <div class="flex flex-col w-1/4">
             <div class="p-4">
+                <SensorsMonitor></SensorsMonitor>
                 <ValveControl />
             </div>
         </div>
