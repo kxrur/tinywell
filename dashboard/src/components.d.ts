@@ -9,6 +9,7 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     Button: typeof import('./components/ui/button/Button.vue')['default']
+    CanvasCell: typeof import('./components/PresetControls/CanvasCell.vue')['default']
     ContextMenu: typeof import('./components/ui/context-menu/ContextMenu.vue')['default']
     ContextMenuCheckboxItem: typeof import('./components/ui/context-menu/ContextMenuCheckboxItem.vue')['default']
     ContextMenuContent: typeof import('./components/ui/context-menu/ContextMenuContent.vue')['default']
