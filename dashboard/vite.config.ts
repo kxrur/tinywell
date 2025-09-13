@@ -2,14 +2,32 @@ import path from "node:path";
 import { defineConfig } from "vite";
 import vue from "@vitejs/plugin-vue";
 import tailwindcss from "@tailwindcss/vite";
+import AutoImport from 'unplugin-auto-import/vite';
+import Components from 'unplugin-vue-components/vite'
 
 // @ts-expect-error process is a nodejs global
 const host = process.env.TAURI_DEV_HOST;
 
 // https://vitejs.dev/config/
 export default defineConfig(async () => ({
-  plugins: [vue(), tailwindcss()],
- resolve: {
+  plugins: [
+    vue(), 
+    tailwindcss(),     
+    AutoImport({
+      imports: [
+        'vue',
+      ],
+      dts: 'src/auto-imports.d.ts',
+      eslintrc: {
+        enabled: true,
+      },
+      vueTemplate: true,
+    }),
+    Components({
+      dts: 'src/components.d.ts',
+    }),
+  ],
+  resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
     },
