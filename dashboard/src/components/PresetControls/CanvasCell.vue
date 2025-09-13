@@ -40,16 +40,6 @@
 </template>
 
 <script setup lang="ts">
-import {
-    ContextMenu,
-    ContextMenuContent,
-    ContextMenuLabel,
-    ContextMenuSeparator,
-    ContextMenuTrigger,
-} from '@/components/ui/context-menu'
-import { Button } from '@/components/ui/button'
-import { Switch } from '@/components/ui/switch'
-import { Label } from '@/components/ui/label'
 
 interface Cell {
     label: string

@@ -1,9 +1,9 @@
 <!-- BrightnessSlider.vue -->
 <template>
     <div class="space-y-2">
-        <div class="flex items-center justify-between">
+        <div class="flex items-center justify-between w-full">
             <Label class="text-sm font-medium">Brightness</Label>
-            <span class="text-sm text-muted-foreground">{{ modelValue }}%</span>
+            <span class="text-sm text-muted-foreground ml-4">{{ modelValue }}%</span>
         </div>
         <Slider :model-value="[modelValue]" @update:model-value="handleChange" :max="100" :step="1" :class="sliderClass"
             :disabled="disabled" />
@@ -11,8 +11,6 @@
 </template>
 
 <script setup lang="ts">
-import { Slider } from '@/components/ui/slider'
-import { Label } from '@/components/ui/label'
 
 interface Props {
     modelValue: number

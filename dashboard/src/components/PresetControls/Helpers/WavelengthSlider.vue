@@ -1,8 +1,8 @@
 <template>
     <div class="space-y-2">
-        <div class="flex items-center justify-between">
+        <div class="flex items-center justify-between w-full">
             <Label class="text-sm font-medium">Wavelength</Label>
-            <span class="text-sm text-muted-foreground">{{ modelValue }}nm</span>
+            <span class="text-sm text-muted-foreground ml-4">{{ modelValue }}nm</span>
         </div>
         <div class="flex items-center gap-2">
             <div class="w-4 h-4 rounded border" :style="{ backgroundColor: wavelengthToColor(modelValue) }"></div>
@@ -13,8 +13,6 @@
 </template>
 
 <script setup lang="ts">
-import { Slider } from '@/components/ui/slider'
-import { Label } from '@/components/ui/label'
 
 interface Props {
     modelValue: number

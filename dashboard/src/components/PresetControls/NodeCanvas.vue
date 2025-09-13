@@ -1,18 +1,30 @@
 <template>
-    <div>
-        <div>
-            <div class="flex items-center ml-12">
-                <Label class="font-bold text-xl mr-2">Uniform Configuration</Label>
-                <Switch />
+    <div class="space-y-4 p-4">
+        <!-- Uniform Configuration Panel -->
+        <div class="flex flex-col items-center space-y-4">
+            <div class="flex items-center space-x-4">
+                <Label class="font-bold text-xl">Uniform Configuration</Label>
+                <Switch :model-value="uniformConfigurationEnabled"
+                    @update:model-value="() => uniformConfigurationEnabled = !uniformConfigurationEnabled" />
+            </div>
+
+            <div class="flex items-center space-x-16">
+                <BrightnessSlider :disabled="!uniformConfigurationEnabled" :modelValue="uniformCell.value"
+                    sliderClass="w-48" />
+                <WavelengthSlider :disabled="!uniformConfigurationEnabled" :modelValue="uniformCell.wavelength"
+                    sliderClass="w-48" />
             </div>
         </div>
 
-        <div class="grid grid-cols-5 gap-4 p-6">
-            <CanvasCell v-for="(cell, index) in cells" :key="index" :cell="cell"
-                :is-context-menu-open="openContextMenu === index"
-                @update:cell="(updatedCell) => handleCellUpdate(index, updatedCell)"
-                @context-menu-toggle="(open) => handleContextMenuToggle(index, open)"
-                @toggle="() => toggleCell(index)" />
+        <!-- Node Canvas -->
+        <div class="flex justify-center">
+            <div class="grid grid-cols-5 gap-4 p-6">
+                <CanvasCell v-for="(cell, index) in cells" :key="index" :cell="cell"
+                    :is-context-menu-open="openContextMenu === index"
+                    @update:cell="(updatedCell) => handleCellUpdate(index, updatedCell)"
+                    @context-menu-toggle="(open) => handleContextMenuToggle(index, open)"
+                    @toggle="() => toggleCell(index)" />
+            </div>
         </div>
     </div>
 </template>
@@ -62,6 +74,12 @@ const cells = ref<Cell[]>([
     { label: "G1", value: 20, active: true, wavelength: 470 },
     { label: "H1", value: 65, active: true, wavelength: 470 },
 ])
+
+const uniformConfigurationEnabled = ref<boolean>(false);
+
+const uniformCell = ref<Cell>(
+    { label: "H1", value: 65, active: true, wavelength: 470 }
+)
 
 const openContextMenu = ref<number | null>(null)
 
