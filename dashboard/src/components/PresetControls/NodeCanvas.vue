@@ -1,15 +1,23 @@
-<!-- NodeCanvas.vue -->
 <template>
-    <div class="grid grid-cols-5 gap-4 p-6">
-        <CanvasCell v-for="(cell, index) in cells" :key="index" :cell="cell"
-            :is-context-menu-open="openContextMenu === index"
-            @update:cell="(updatedCell) => handleCellUpdate(index, updatedCell)"
-            @context-menu-toggle="(open) => handleContextMenuToggle(index, open)" @toggle="() => toggleCell(index)" />
+    <div>
+        <div>
+            <div class="flex items-center ml-12">
+                <Label class="font-bold text-xl mr-2">Uniform Configuration</Label>
+                <Switch />
+            </div>
+        </div>
+
+        <div class="grid grid-cols-5 gap-4 p-6">
+            <CanvasCell v-for="(cell, index) in cells" :key="index" :cell="cell"
+                :is-context-menu-open="openContextMenu === index"
+                @update:cell="(updatedCell) => handleCellUpdate(index, updatedCell)"
+                @context-menu-toggle="(open) => handleContextMenuToggle(index, open)"
+                @toggle="() => toggleCell(index)" />
+        </div>
     </div>
 </template>
 
 <script setup lang="ts">
-import CanvasCell from './CanvasCell.vue'
 
 interface Cell {
     label: string

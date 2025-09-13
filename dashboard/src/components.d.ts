@@ -8,6 +8,7 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    BrightnessSlider: typeof import('./components/PresetControls/Helpers/BrightnessSlider.vue')['default']
     Button: typeof import('./components/ui/button/Button.vue')['default']
     CanvasCell: typeof import('./components/PresetControls/CanvasCell.vue')['default']
     ContextMenu: typeof import('./components/ui/context-menu/ContextMenu.vue')['default']
@@ -82,5 +83,6 @@ declare module 'vue' {
     TooltipContent: typeof import('./components/ui/tooltip/TooltipContent.vue')['default']
     TooltipProvider: typeof import('./components/ui/tooltip/TooltipProvider.vue')['default']
     TooltipTrigger: typeof import('./components/ui/tooltip/TooltipTrigger.vue')['default']
+    WavelengthSlider: typeof import('./components/PresetControls/Helpers/WavelengthSlider.vue')['default']
   }
 }

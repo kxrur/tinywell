@@ -1,3 +1,4 @@
+<!-- CanvasCell.vue -->
 <template>
     <div class="flex flex-col items-center space-y-1">
         <ContextMenu :open="isContextMenuOpen" @update:open="handleContextMenuToggle">
@@ -21,29 +22,13 @@
 
                     <ContextMenuSeparator />
 
-                    <div class="space-y-2">
-                        <div class="flex items-center justify-between">
-                            <Label class="text-sm font-medium">Wavelength</Label>
-                            <span class="text-sm text-muted-foreground">{{ cell.wavelength }} nm</span>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <div class="w-4 h-4 rounded border"
-                                :style="{ backgroundColor: wavelengthToColor(cell.wavelength) }"></div>
-                            <Slider :model-value="[cell.wavelength]" @update:model-value="handleWavelengthChange"
-                                :min="380" :max="700" :step="1" class="flex-1" :disabled="!cell.active" />
-                        </div>
-                    </div>
+                    <WavelengthSlider :model-value="cell.wavelength" @update:model-value="handleWavelengthChange"
+                        :disabled="!cell.active || disableIndividualControls" />
 
                     <ContextMenuSeparator />
 
-                    <div class="space-y-2">
-                        <div class="flex items-center justify-between">
-                            <Label class="text-sm font-medium">Brightness</Label>
-                            <span class="text-sm text-muted-foreground">{{ cell.value }}%</span>
-                        </div>
-                        <Slider :model-value="[cell.value]" @update:model-value="handleValueChange" :max="100" :step="1"
-                            class="w-full" :disabled="!cell.active" />
-                    </div>
+                    <BrightnessSlider :model-value="cell.value" @update:model-value="handleValueChange"
+                        :disabled="!cell.active || disableIndividualControls" />
                 </div>
             </ContextMenuContent>
         </ContextMenu>
@@ -64,7 +49,6 @@ import {
 } from '@/components/ui/context-menu'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
-import { Slider } from '@/components/ui/slider'
 import { Label } from '@/components/ui/label'
 
 interface Cell {
@@ -77,6 +61,7 @@ interface Cell {
 interface Props {
     cell: Cell
     isContextMenuOpen: boolean
+    disableIndividualControls?: boolean
 }
 
 interface Emits {
@@ -85,7 +70,10 @@ interface Emits {
     (e: 'toggle'): void
 }
 
-const props = defineProps<Props>()
+const props = withDefaults(defineProps<Props>(), {
+    disableIndividualControls: false
+})
+
 const emit = defineEmits<Emits>()
 
 const wavelengthToColor = (wavelength: number): string => {
@@ -208,17 +196,13 @@ const handleActiveChange = (checked: boolean) => {
     emit('update:cell', updatedCell)
 }
 
-const handleWavelengthChange = (value: number[] | undefined) => {
-    if (value && value.length > 0) {
-        const updatedCell = { ...props.cell, wavelength: value[0] }
-        emit('update:cell', updatedCell)
-    }
+const handleWavelengthChange = (wavelength: number) => {
+    const updatedCell = { ...props.cell, wavelength }
+    emit('update:cell', updatedCell)
 }
 
-const handleValueChange = (value: number[] | undefined) => {
-    if (value && value.length > 0) {
-        const updatedCell = { ...props.cell, value: value[0] }
-        emit('update:cell', updatedCell)
-    }
+const handleValueChange = (value: number) => {
+    const updatedCell = { ...props.cell, value }
+    emit('update:cell', updatedCell)
 }
 </script>
