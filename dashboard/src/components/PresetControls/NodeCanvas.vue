@@ -4,16 +4,30 @@
         <div class="flex flex-col items-center space-y-4">
             <div class="flex items-center space-x-4">
                 <Label class="font-bold text-xl">Uniform Configuration</Label>
-                <Switch :model-value="uniformConfigurationEnabled"
-                    @update:model-value="() => uniformConfigurationEnabled = !uniformConfigurationEnabled" />
+                <Switch :model-value="uniformConfigurationEnabled" @update:model-value="toggleUniformConfiguration" />
             </div>
 
-            <div class="flex items-center space-x-16">
-                <BrightnessSlider :disabled="!uniformConfigurationEnabled" :modelValue="uniformCell.value"
-                    sliderClass="w-48" />
-                <WavelengthSlider :disabled="!uniformConfigurationEnabled" :modelValue="uniformCell.wavelength"
-                    sliderClass="w-48" />
-            </div>
+            <!-- Animated slide-down panel -->
+            <Transition enter-active-class="transition-all duration-300 ease-out"
+                enter-from-class="opacity-0 transform -translate-y-4"
+                enter-to-class="opacity-100 transform translate-y-0"
+                leave-active-class="transition-all duration-200 ease-in"
+                leave-from-class="opacity-100 transform translate-y-0"
+                leave-to-class="opacity-0 transform -translate-y-4">
+                <div v-if="uniformConfigurationEnabled"
+                    class="flex flex-col items-center space-y-4 p-4 border rounded-lg bg-muted/20 max-w-sm">
+                    <div class="flex flex-col space-y-4 w-full">
+                        <BrightnessSlider :modelValue="uniformCell.value" @update:modelValue="updateUniformBrightness"
+                            sliderClass="w-full" />
+                        <WavelengthSlider :modelValue="uniformCell.wavelength"
+                            @update:modelValue="updateUniformWavelength" sliderClass="w-full" />
+                    </div>
+
+                    <div class="text-sm text-muted-foreground text-center">
+                        Changes apply immediately to all active cells
+                    </div>
+                </div>
+            </Transition>
         </div>
 
         <!-- Node Canvas -->
@@ -97,5 +111,36 @@ const handleCellUpdate = (index: number, updatedCell: Cell) => {
 
 const toggleCell = (index: number) => {
     cells.value[index].active = !cells.value[index].active
+}
+
+const toggleUniformConfiguration = (enabled: boolean) => {
+    uniformConfigurationEnabled.value = enabled
+    if (enabled) {
+        // Immediately apply current uniform settings when enabled
+        applyUniformConfiguration()
+    }
+}
+
+const updateUniformBrightness = (value: number) => {
+    uniformCell.value.value = value
+    // Apply immediately if uniform mode is enabled
+    if (uniformConfigurationEnabled.value) {
+        applyUniformConfiguration()
+    }
+}
+
+const updateUniformWavelength = (wavelength: number) => {
+    uniformCell.value.wavelength = wavelength
+    // Apply immediately if uniform mode is enabled
+    if (uniformConfigurationEnabled.value) {
+        applyUniformConfiguration()
+    }
+}
+
+const applyUniformConfiguration = () => {
+    cells.value.forEach(cell => {
+        cell.value = uniformCell.value.value
+        cell.wavelength = uniformCell.value.wavelength
+    })
 }
 </script>
