@@ -1,5 +1,5 @@
 <template>
-    <div class="flex h-screen w-full bg-background">
+    <div class="flex h-full w-full bg-background">
         <div class="flex flex-col w-3/12 h-full justify-center space-y-36 p-4">
             <PumpControls name="Pump 1" />
             <PumpControls name="Pump 2" />
