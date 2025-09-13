@@ -99,6 +99,7 @@ declare module 'vue' {
     TableHead: typeof import('./components/ui/table/TableHead.vue')['default']
     TableHeader: typeof import('./components/ui/table/TableHeader.vue')['default']
     TableRow: typeof import('./components/ui/table/TableRow.vue')['default']
+    TestControls: typeof import('./components/TestControls/TestControls.vue')['default']
     Tooltip: typeof import('./components/ui/tooltip/Tooltip.vue')['default']
     TooltipContent: typeof import('./components/ui/tooltip/TooltipContent.vue')['default']
     TooltipProvider: typeof import('./components/ui/tooltip/TooltipProvider.vue')['default']
