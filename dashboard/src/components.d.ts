@@ -34,6 +34,7 @@ declare module 'vue' {
     ContextMenuSubContent: typeof import('./components/ui/context-menu/ContextMenuSubContent.vue')['default']
     ContextMenuSubTrigger: typeof import('./components/ui/context-menu/ContextMenuSubTrigger.vue')['default']
     ContextMenuTrigger: typeof import('./components/ui/context-menu/ContextMenuTrigger.vue')['default']
+    HeaterControl: typeof import('./components/HeaterControls/HeaterControl.vue')['default']
     Input: typeof import('./components/ui/input/Input.vue')['default']
     Label: typeof import('./components/ui/label/Label.vue')['default']
     MainWindow: typeof import('./components/MainWindow.vue')['default']
