@@ -27,6 +27,10 @@ export function convertWavelengthToColor(wavelength: number) : string {
         red = 1.0
         green = 0.0
         blue = 0.0
+    } else if ((wavelength >= 781) && (wavelength <= 850)) {
+        red = 1.0
+        green = 0.0
+        blue = 0.0
     } else {
         red = 0.0
         green = 0.0
@@ -40,6 +44,8 @@ export function convertWavelengthToColor(wavelength: number) : string {
         factor = 1.0
     } else if ((wavelength >= 701) && (wavelength < 781)) {
         factor = 0.3 + 0.7 * (780 - wavelength) / (780 - 700)
+    } else if ((wavelength >= 781) && (wavelength <= 850)) {
+        factor = 0.3 * (850 - wavelength) / (850 - 781)
     } else {
         factor = 0.0
     }
