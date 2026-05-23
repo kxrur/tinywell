@@ -6,7 +6,12 @@ use specta_typescript::Typescript;
 use tauri::Manager;
 use tauri_specta::*;
 
+mod model;
+mod serial;
 mod state;
+
+#[cfg(test)]
+mod test;
 
 use crate::state::AppState;
 
@@ -18,9 +23,7 @@ fn greet(name: &str) -> String {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-let builder = Builder::<tauri::Wry>::new().commands(collect_commands![
-    greet
-    ]);
+    let builder = Builder::<tauri::Wry>::new().commands(collect_commands![greet]);
 
     #[cfg(debug_assertions)] // <- Only export on non-release builds
     builder

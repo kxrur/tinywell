@@ -26,3 +26,4 @@ specta = { version = "=2.0.0-rc.22", features = ["serde"] }
 specta-typescript = "0.0.9"
 tauri-specta = { version = "=2.0.0-rc.21", features = ["derive", "typescript"] }
 tauri-plugin-fs = "2"
+serialport = "4.9.0"
