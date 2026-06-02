@@ -53,40 +53,20 @@ interface Cell {
 }
 
 const cells = ref<Cell[]>([
-    // Row 5 (top)
-    { label: "D5", value: 75, active: true, wavelength: 470 },
-    { label: "E5", value: 0, active: false, wavelength: 470 },
-    { label: "F5", value: 50, active: true, wavelength: 620 },
-    { label: "G5", value: 25, active: true, wavelength: 530 },
-    { label: "H5", value: 100, active: true, wavelength: 580 },
-
-    // Row 4
-    { label: "D4", value: 0, active: false, wavelength: 470 },
-    { label: "E4", value: 80, active: true, wavelength: 450 },
-    { label: "F4", value: 0, active: false, wavelength: 470 },
-    { label: "G4", value: 0, active: false, wavelength: 470 },
-    { label: "H4", value: 0, active: false, wavelength: 470 },
-
-    // Row 3
-    { label: "D3", value: 60, active: true, wavelength: 660 },
-    { label: "E3", value: 0, active: false, wavelength: 470 },
-    { label: "F3", value: 40, active: true, wavelength: 590 },
-    { label: "G3", value: 90, active: true, wavelength: 490 },
-    { label: "H3", value: 30, active: true, wavelength: 470 },
-
-    // Row 2
-    { label: "D2", value: 0, active: false, wavelength: 470 },
-    { label: "E2", value: 0, active: false, wavelength: 470 },
-    { label: "F2", value: 70, active: true, wavelength: 470 },
-    { label: "G2", value: 85, active: true, wavelength: 470 },
-    { label: "H2", value: 45, active: true, wavelength: 470 },
-
-    // Row 1 (bottom)
-    { label: "D1", value: 95, active: true, wavelength: 470 },
-    { label: "E1", value: 0, active: false, wavelength: 470 },
-    { label: "F1", value: 55, active: true, wavelength: 470 },
-    { label: "G1", value: 20, active: true, wavelength: 470 },
-    { label: "H1", value: 65, active: true, wavelength: 470 },
+    { label: "S1", value: 75, active: true, wavelength: 470 },
+    { label: "S2", value: 0, active: false, wavelength: 470 },
+    { label: "S3", value: 50, active: true, wavelength: 620 },
+    { label: "S4", value: 25, active: true, wavelength: 530 },
+    { label: "S5", value: 100, active: true, wavelength: 580 },
+    { label: "S6", value: 0, active: false, wavelength: 470 },
+    { label: "S7", value: 80, active: true, wavelength: 450 },
+    { label: "S8", value: 0, active: false, wavelength: 470 },
+    { label: "S9", value: 0, active: false, wavelength: 470 },
+    { label: "S10", value: 0, active: false, wavelength: 470 },
+    { label: "S11", value: 60, active: true, wavelength: 660 },
+    { label: "S12", value: 0, active: false, wavelength: 470 },
+    { label: "S13", value: 40, active: true, wavelength: 590 },
+    { label: "S14", value: 90, active: true, wavelength: 490 },
 ])
 
 const uniformConfigurationEnabled = ref<boolean>(false);

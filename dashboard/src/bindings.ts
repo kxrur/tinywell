@@ -7,6 +7,62 @@
 export const commands = {
 async greet(name: string) : Promise<string> {
     return await TAURI_INVOKE("greet", { name });
+},
+async serialSetPort(port: string) : Promise<Result<null, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("serial_set_port", { port }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async serialConnect() : Promise<Result<null, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("serial_connect") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async serialDisconnect() : Promise<Result<null, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("serial_disconnect") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async serialStatus() : Promise<Result<ConnectionStatus, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("serial_status") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async serialListPorts() : Promise<Result<string[], string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("serial_list_ports") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async serialSend(request: SerialRequest, timeoutMs: number | null) : Promise<Result<SerialResponse, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("serial_send", { request, timeoutMs }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async subscribeSensorFrames(channel: TAURI_CHANNEL<SensorFrame>) : Promise<Result<null, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("subscribe_sensor_frames", { channel }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
 }
 }
 
@@ -20,7 +76,12 @@ async greet(name: string) : Promise<string> {
 
 /** user-defined types **/
 
-
+export type ConnectionStatus = "Disconnected" | "Connecting" | { Connected: { port: string } }
+export type LedAction = "Off" | "On" | "Toggle" | "SetBrightness"
+export type SensorFrame = { values: number[]; wavelength: number }
+export type SerialRequest = "Ping" | "SystemStatus" | "EnvironmentInfo" | "PhotosensorResults" | { SetLedState: { wavelength: number; action: LedAction; brightness: number } }
+export type SerialResponse = "Ping" | { SystemStatus: { fw: number; state: number; uptime: number } } | { EnvironmentInfo: { well_temp: number; ambient_temp: number; ambient_pressure: number; ambient_humidity: number } } | { PhotosensorResults: { wavelength: number; values: number[] } } | { TelecommandAck: { tc_id: number; tc_result: number } } | { Error: { code: number } } | { Unknown: { frame_id: number; payload: number[] } }
+export type TAURI_CHANNEL<TSend> = null
 
 /** tauri-specta globals **/
 

@@ -1,37 +1,48 @@
 <!-- CanvasCell.vue -->
 <template>
     <div class="flex flex-col items-center space-y-1">
-        <ContextMenu :open="isContextMenuOpen" @update:open="handleContextMenuToggle">
-            <ContextMenuTrigger>
-                <Button variant="ghost" class="h-12 w-12 rounded-full flex items-center justify-center text-sm" :style="{
-                    backgroundColor: getCellColor(),
-                    color: getTextColor()
-                }" @click="handleToggle" @wheel.prevent="handleWheelAdjust">
-                    {{ cell.value }}
-                </Button>
-            </ContextMenuTrigger>
-            <ContextMenuContent class="w-64">
-                <ContextMenuLabel>{{ cell.label }} Settings</ContextMenuLabel>
-                <ContextMenuSeparator />
+        <template v-if="readOnly">
+            <Button variant="ghost" class="h-12 w-12 rounded-full flex items-center justify-center text-sm" :style="{
+                backgroundColor: getCellColor(),
+                color: getTextColor()
+            }">
+                {{ cell.value }}
+            </Button>
+        </template>
+        <template v-else>
+            <ContextMenu :open="isContextMenuOpen" @update:open="handleContextMenuToggle">
+                <ContextMenuTrigger>
+                    <Button variant="ghost" class="h-12 w-12 rounded-full flex items-center justify-center text-sm"
+                        :style="{
+                            backgroundColor: getCellColor(),
+                            color: getTextColor()
+                        }" @click="handleToggle" @wheel.prevent="handleWheelAdjust">
+                        {{ cell.value }}
+                    </Button>
+                </ContextMenuTrigger>
+                <ContextMenuContent class="w-64">
+                    <ContextMenuLabel>{{ cell.label }} Settings</ContextMenuLabel>
+                    <ContextMenuSeparator />
 
-                <div class="p-3 space-y-3">
-                    <div class="flex items-center justify-between">
-                        <Label class="text-sm font-medium">Active</Label>
-                        <Switch :model-value="cell.active" @update:model-value="handleActiveChange" />
+                    <div class="p-3 space-y-3">
+                        <div class="flex items-center justify-between">
+                            <Label class="text-sm font-medium">Active</Label>
+                            <Switch :model-value="cell.active" @update:model-value="handleActiveChange" />
+                        </div>
+
+                        <ContextMenuSeparator />
+
+                        <WavelengthSlider :model-value="cell.wavelength" @update:model-value="handleWavelengthChange"
+                            :disabled="!cell.active || disableIndividualControls" />
+
+                        <ContextMenuSeparator />
+
+                        <BrightnessSlider :model-value="cell.value" @update:model-value="handleValueChange"
+                            :disabled="!cell.active || disableIndividualControls" />
                     </div>
-
-                    <ContextMenuSeparator />
-
-                    <WavelengthSlider :model-value="cell.wavelength" @update:model-value="handleWavelengthChange"
-                        :disabled="!cell.active || disableIndividualControls" />
-
-                    <ContextMenuSeparator />
-
-                    <BrightnessSlider :model-value="cell.value" @update:model-value="handleValueChange"
-                        :disabled="!cell.active || disableIndividualControls" />
-                </div>
-            </ContextMenuContent>
-        </ContextMenu>
+                </ContextMenuContent>
+            </ContextMenu>
+        </template>
 
         <span class="text-xs">
             {{ cell.label }}
@@ -54,6 +65,7 @@ interface Props {
     cell: Cell
     isContextMenuOpen: boolean
     disableIndividualControls?: boolean
+    readOnly?: boolean
 }
 
 interface Emits {
@@ -63,7 +75,8 @@ interface Emits {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-    disableIndividualControls: false
+    disableIndividualControls: false,
+    readOnly: false
 })
 
 const emit = defineEmits<Emits>()
@@ -108,15 +121,21 @@ const getTextColor = (): string => {
 }
 
 const handleContextMenuToggle = (open: boolean) => {
+    if (props.readOnly) {
+        return
+    }
     emit('context-menu-toggle', open)
 }
 
 const handleToggle = () => {
+    if (props.readOnly) {
+        return
+    }
     emit('toggle')
 }
 
 const handleWheelAdjust = (event: WheelEvent) => {
-    if (!props.cell.active) return
+    if (props.readOnly || !props.cell.active) return
 
     const delta = event.deltaY > 0 ? -5 : 5
     const newValue = Math.max(0, Math.min(100, props.cell.value + delta))
@@ -126,16 +145,25 @@ const handleWheelAdjust = (event: WheelEvent) => {
 }
 
 const handleActiveChange = (checked: boolean) => {
+    if (props.readOnly) {
+        return
+    }
     const updatedCell = { ...props.cell, active: checked }
     emit('update:cell', updatedCell)
 }
 
 const handleWavelengthChange = (wavelength: number) => {
+    if (props.readOnly) {
+        return
+    }
     const updatedCell = { ...props.cell, wavelength }
     emit('update:cell', updatedCell)
 }
 
 const handleValueChange = (value: number) => {
+    if (props.readOnly) {
+        return
+    }
     const updatedCell = { ...props.cell, value }
     emit('update:cell', updatedCell)
 }

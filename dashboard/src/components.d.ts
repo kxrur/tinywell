@@ -53,6 +53,7 @@ declare module 'vue' {
     SelectSeparator: typeof import('./components/ui/select/SelectSeparator.vue')['default']
     SelectTrigger: typeof import('./components/ui/select/SelectTrigger.vue')['default']
     SelectValue: typeof import('./components/ui/select/SelectValue.vue')['default']
+    SensorCanvas: typeof import('./components/Sensors/SensorCanvas.vue')['default']
     SensorsMonitor: typeof import('./components/Sensors/SensorsMonitor.vue')['default']
     Separator: typeof import('./components/ui/separator/Separator.vue')['default']
     Sheet: typeof import('./components/ui/sheet/Sheet.vue')['default']

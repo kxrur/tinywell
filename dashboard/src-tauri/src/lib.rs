@@ -2,10 +2,12 @@
 
 use std::sync::Mutex;
 
+use log::info;
 use specta_typescript::Typescript;
 use tauri::Manager;
 use tauri_specta::*;
 
+mod app;
 mod model;
 mod serial;
 mod state;
@@ -13,17 +15,28 @@ mod state;
 #[cfg(test)]
 mod test;
 
+use crate::app::serial_app::{
+    greet, serial_connect, serial_disconnect, serial_list_ports, serial_send, serial_set_port,
+    serial_status, subscribe_sensor_frames,
+};
 use crate::state::AppState;
-
-#[tauri::command]
-#[specta::specta]
-fn greet(name: &str) -> String {
-    format!("Hello, {}! You've been greeted from Rust!", name)
-}
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    let builder = Builder::<tauri::Wry>::new().commands(collect_commands![greet]);
+    let _ = env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("debug"))
+        .try_init();
+    info!("Tinywell backend starting");
+
+    let builder = Builder::<tauri::Wry>::new().commands(collect_commands![
+        greet,
+        serial_set_port,
+        serial_connect,
+        serial_disconnect,
+        serial_status,
+        serial_list_ports,
+        serial_send,
+        subscribe_sensor_frames
+    ]);
 
     #[cfg(debug_assertions)] // <- Only export on non-release builds
     builder
