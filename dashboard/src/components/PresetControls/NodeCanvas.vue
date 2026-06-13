@@ -32,12 +32,20 @@
 
         <!-- Node Canvas -->
         <div class="flex justify-center">
-            <div class="grid grid-cols-5 gap-4 p-6">
-                <CanvasCell v-for="(cell, index) in cells" :key="index" :cell="cell"
-                    :is-context-menu-open="openContextMenu === index"
-                    @update:cell="(updatedCell) => handleCellUpdate(index, updatedCell)"
-                    @context-menu-toggle="(open) => handleContextMenuToggle(index, open)"
-                    @toggle="() => toggleCell(index)" />
+            <div class="flex flex-col gap-4 p-6">
+                <div v-for="(row, rowIndex) in layoutRows" :key="rowIndex" class="grid grid-cols-4 gap-4">
+                    <template v-for="slot in row" :key="slot === null ? `empty-${rowIndex}` : slot">
+                        <div v-if="slot === null" class="size-20" />
+                        <CanvasCell
+                            v-else
+                            :cell="cells[slot]"
+                            :is-context-menu-open="openContextMenu === slot"
+                            @update:cell="(updatedCell) => handleCellUpdate(slot, updatedCell)"
+                            @context-menu-toggle="(open) => handleContextMenuToggle(slot, open)"
+                            @toggle="() => toggleCell(slot)"
+                        />
+                    </template>
+                </div>
             </div>
         </div>
     </div>
@@ -76,6 +84,12 @@ const uniformCell = ref<Cell>(
 )
 
 const openContextMenu = ref<number | null>(null)
+const layoutRows = [
+    [null, 0, 1, 2],
+    [3, 4, 5, 6],
+    [7, 8, 9, 10],
+    [null, 11, 12, 13],
+] as const
 
 const handleContextMenuToggle = (index: number, open: boolean) => {
     if (open) {

@@ -1,8 +1,13 @@
 <template>
   <div class="space-y-4 p-4">
     <div class="flex justify-center">
-      <div class="grid grid-cols-5 gap-4 p-6">
-        <CanvasCell v-for="(cell, index) in cells" :key="index" :cell="cell" :is-context-menu-open="false" read-only />
+      <div class="flex flex-col gap-4 p-6">
+        <div v-for="(row, rowIndex) in layoutRows" :key="rowIndex" class="grid grid-cols-4 gap-4">
+          <template v-for="slot in row" :key="slot === null ? `empty-${rowIndex}` : slot">
+            <div v-if="slot === null" class="size-20" />
+            <CanvasCell v-else :cell="cells[slot]" :is-context-menu-open="false" read-only />
+          </template>
+        </div>
       </div>
     </div>
   </div>
@@ -35,6 +40,12 @@ type SensorFrame = {
 
 const isMounted = ref(true)
 const serialStore = useSerialStore()
+const layoutRows = [
+  [null, 0, 1, 2],
+  [3, 4, 5, 6],
+  [7, 8, 9, 10],
+  [null, 11, 12, 13],
+] as const
 
 const wavelengthEnumToNm = (wavelength: number): number => {
   switch (wavelength) {
