@@ -21,9 +21,43 @@
 #define ERR_INVALID_LENGTH          0x02
 #define ERR_INVALID_ARGS            0x03
 
+// LED telecommand arguments
+#define LED_ACTION_OFF              0
+#define LED_ACTION_ON               1
+#define LED_ACTION_TOGGLE           2
+#define LED_ACTION_SET_BRIGHTNESS   3
+
 static const size_t SERIAL_MAX_PAYLOAD = 64;
 
 static uint32_t fakeUptimeStart = 0;
+static uint8_t currentWavelength = 0;
+static uint8_t ledEnabled[4] = {1, 1, 1, 1};
+static uint8_t ledBrightness[4] = {255, 255, 255, 255};
+
+static uint8_t nextEnabledWavelength(uint8_t start) {
+  for (uint8_t offset = 0; offset < 4; offset++) {
+    uint8_t candidate = (uint8_t)((start + offset) % 4);
+    if (ledEnabled[candidate]) {
+      return candidate;
+    }
+  }
+  return start;
+}
+
+static uint32_t wavelengthSensorPattern(uint8_t wavelength, uint8_t sensorIndex, uint32_t tick) {
+  switch (wavelength) {
+    case 0:
+      return 900 + (((sensorIndex * 220) + tick) % 2200);
+    case 1:
+      return 900 + ((((13 - sensorIndex) * 220) + tick) % 2200);
+    case 2:
+      return 1000 + ((((sensorIndex % 2) == 0 ? 1800 : 500) + tick) % 2000);
+    case 3:
+      return 950 + (((((sensorIndex + 3) % 4) * 520) + tick) % 2100);
+    default:
+      return 1000 + tick % 2000;
+  }
+}
 
 static uint8_t checksumFor(uint8_t frameId, const uint8_t *payload, size_t length) {
   uint16_t sum = frameId;
@@ -89,6 +123,24 @@ static void respondSys() {
   writeFrame(CMD_SYSTEM_STATUS, payload, sizeof(payload));
 }
 
+static void respondExperimentStatus() {
+  uint8_t payload[5] = {0};
+  uint8_t lastState = 2;
+  uint8_t progress = 1;
+  uint32_t value = 42;
+  payload[0] = (uint8_t)((lastState << 3) | (progress & 0x07));
+  writeU32Le(&payload[1], value);
+  writeFrame(CMD_EXPERIMENT_STATUS, payload, sizeof(payload));
+}
+
+static void respondHardwareHealth() {
+  uint8_t payload[6] = {0};
+  writeU16Le(&payload[0], 300);
+  writeU16Le(&payload[2], 400);
+  writeU16Le(&payload[4], 500);
+  writeFrame(CMD_HARDWARE_HEALTH_STATUS, payload, sizeof(payload));
+}
+
 static void respondEnv() {
   uint8_t payload[14] = {0};
   uint16_t wellTemp = 250;
@@ -103,15 +155,20 @@ static void respondEnv() {
 }
 
 static void respondPhoto() {
+  currentWavelength = nextEnabledWavelength((uint8_t)(currentWavelength + 1));
+
   uint8_t payload[57] = {0};
-  payload[0] = 0;
+  payload[0] = currentWavelength;
 
   uint32_t t = millis();
+  uint8_t brightness = ledBrightness[currentWavelength];
+  uint32_t brightnessScale = (uint32_t)brightness + 1;
+  uint32_t enabledScale = ledEnabled[currentWavelength] ? 1 : 0;
+  uint32_t tick = t / 50;
 
   for (int i = 0; i < 14; i++) {
-    // Base value plus a slow oscillation
-    uint32_t value = 1000 +
-                     ((t / 50) + (i * 137)) % 3000;
+    uint32_t base = wavelengthSensorPattern(currentWavelength, (uint8_t)i, tick);
+    uint32_t value = (base * brightnessScale * enabledScale) / 256;
 
     writeU32Le(&payload[1 + (i * 4)], value);
   }
@@ -127,9 +184,33 @@ static void respondLed(const uint8_t *payload, size_t length) {
   uint8_t wavelength = payload[0];
   uint8_t action = payload[1];
   uint8_t brightness = payload[2];
-  if (wavelength > 3 || action > 3 || (action != 3 && brightness != 0)) {
+  if (wavelength > 3 || action > LED_ACTION_SET_BRIGHTNESS) {
     sendError(ERR_INVALID_ARGS);
     return;
+  }
+
+  currentWavelength = wavelength;
+  switch (action) {
+    case LED_ACTION_OFF:
+      ledEnabled[wavelength] = 0;
+      break;
+    case LED_ACTION_ON:
+      ledEnabled[wavelength] = 1;
+      break;
+    case LED_ACTION_TOGGLE:
+      ledEnabled[wavelength] = ledEnabled[wavelength] ? 0 : 1;
+      break;
+    case LED_ACTION_SET_BRIGHTNESS:
+      ledBrightness[wavelength] = brightness;
+      if (brightness == 0) {
+        ledEnabled[wavelength] = 0;
+      } else {
+        ledEnabled[wavelength] = 1;
+      }
+      break;
+    default:
+      sendError(ERR_INVALID_ARGS);
+      return;
   }
 
   uint8_t ackPayload[2] = {CMD_SET_LED_STATE, 0x00};
@@ -143,6 +224,12 @@ static void handleFrame(uint8_t frameId, const uint8_t *payload, size_t length) 
       break;
     case CMD_SYSTEM_STATUS:
       respondSys();
+      break;
+    case CMD_EXPERIMENT_STATUS:
+      respondExperimentStatus();
+      break;
+    case CMD_HARDWARE_HEALTH_STATUS:
+      respondHardwareHealth();
       break;
     case CMD_ENVIRONMENT_INFORMATION:
       respondEnv();

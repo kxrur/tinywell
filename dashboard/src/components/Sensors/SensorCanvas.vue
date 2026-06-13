@@ -22,7 +22,7 @@ interface Cell {
 
 const cells = ref<Cell[]>(Array.from({ length: 14 }, (_, index) => ({
   label: `S${index + 1}`,
-  value: 0,
+  value: 100,
   active: true,
   wavelength: 470,
 })))
@@ -34,17 +34,34 @@ type SensorFrame = {
 
 const isMounted = ref(true)
 
+const wavelengthEnumToNm = (wavelength: number): number => {
+  switch (wavelength) {
+    case 0:
+      return 470
+    case 1:
+      return 570
+    case 2:
+      return 630
+    case 3:
+      return 850
+    default:
+      return 470
+  }
+}
+
 const applyFrame = (frame: SensorFrame) => {
+  const displayWavelength = wavelengthEnumToNm(frame.wavelength)
   const maxValue = Math.max(...frame.values, 1)
 
   cells.value = cells.value.map((cell, index) => {
+    const hasReading = index < frame.values.length
     const raw = frame.values[index] ?? 0
     const normalized = Math.round((raw / maxValue) * 100)
     return {
       ...cell,
-      value: normalized,
-      wavelength: frame.wavelength,
-      active: raw > 0,
+      value: hasReading ? normalized : 0,
+      wavelength: hasReading ? displayWavelength : cell.wavelength,
+      active: hasReading,
     }
   })
 }
@@ -52,10 +69,10 @@ const applyFrame = (frame: SensorFrame) => {
 onMounted(async () => {
   const channel = new Channel<SensorFrame>()
   channel.onmessage = (frame) => {
-    console.log(frame)
     if (!isMounted.value) {
       return
     }
+    console.log(frame)
     applyFrame(frame)
   }
   await commands.serialSetPort('/dev/ttyUSB0')
