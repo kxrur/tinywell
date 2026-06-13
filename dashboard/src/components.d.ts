@@ -38,6 +38,7 @@ declare module 'vue' {
     Input: typeof import('./components/ui/input/Input.vue')['default']
     Label: typeof import('./components/ui/label/Label.vue')['default']
     MainWindow: typeof import('./components/MainWindow.vue')['default']
+    MainWindowTabs: typeof import('./components/MainWindowTabs.vue')['default']
     NavBar: typeof import('./components/Navigation/NavBar.vue')['default']
     NodeCanvas: typeof import('./components/PresetControls/NodeCanvas.vue')['default']
     Progress: typeof import('./components/ui/progress/Progress.vue')['default']

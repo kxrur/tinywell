@@ -53,9 +53,6 @@
 </template>
 
 <script setup lang="ts">
-import { Slider } from '@/components/ui/slider'
-import { Label } from '@/components/ui/label'
-
 interface Props {
     name?: string
 }

@@ -85,7 +85,7 @@ async subscribeEnvironmentFrames(channel: TAURI_CHANNEL<EnvironmentFrame>) : Pro
 /** user-defined types **/
 
 export type ConnectionStatus = "Disconnected" | "Connecting" | { Connected: { port: string } }
-export type EnvironmentFrame = { wellTempC: number; ambientTempC: number; ambientPressureHpa: number; ambientHumidityPercent: number; ambientPressureRaw: number; ambientHumidityRaw: number }
+export type EnvironmentFrame = { wellTempC: number; ambientTempRaw: number; ambientPressureRaw: number; ambientHumidityRaw: number }
 export type LedAction = "Off" | "On" | "Toggle" | "SetBrightness"
 export type SensorFrame = { values: number[]; wavelength: number }
 export type SerialRequest = "Ping" | "SystemStatus" | "EnvironmentInfo" | "PhotosensorResults" | { SetLedState: { wavelength: number; action: LedAction; brightness: number } }

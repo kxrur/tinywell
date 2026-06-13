@@ -39,8 +39,5 @@
 </template>
 
 <script setup lang="ts">
-import { Switch } from '@/components/ui/switch'
-import { Label } from '@/components/ui/label'
-
 const isOpen = ref(false)
 </script>

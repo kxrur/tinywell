@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-col gap-4 rounded-lg border bg-background p-4">
+  <div class="inline-flex max-w-full self-center flex-col gap-4 rounded-lg border bg-background p-4">
     <div class="flex items-center justify-between">
       <div>
         <div class="flex items-center gap-2">
@@ -24,7 +24,7 @@
       </div>
     </div>
 
-    <div class="overflow-hidden rounded-lg border">
+    <div class="inline-block max-w-full self-center overflow-hidden rounded-lg border">
       <Table>
         <TableHeader>
           <TableRow>
@@ -53,7 +53,6 @@ import { Channel } from '@tauri-apps/api/core'
 import { Info } from 'lucide-vue-next'
 import { commands } from '@/bindings'
 import { useSerialStore } from '@/stores/serial'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 
 type EnvironmentFrame = {
   wellTempC: number

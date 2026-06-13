@@ -1,10 +1,13 @@
 <template>
-    <div class="flex h-full w-full bg-background">
-        <div class="flex w-full gap-6 p-4">
-            <div class="flex-1">
+    <div class="flex h-full w-full bg-background p-4">
+        <div class="flex w-full flex-col gap-6">
+            <MainWindowTabs v-model="activeTab" />
+
+            <div v-if="activeTab === 'control'" class="min-h-0 flex-1">
                 <NodeCanvas />
             </div>
-            <div class="flex flex-1 flex-col gap-6">
+
+            <div v-else class="flex min-h-0 flex-1 flex-col items-center gap-6">
                 <SensorCanvas />
                 <SensorsMonitor />
             </div>
@@ -12,7 +15,6 @@
     </div>
 </template>
 <script setup lang="ts">
-import NodeCanvas from './PresetControls/NodeCanvas.vue'
-import SensorCanvas from './Sensors/SensorCanvas.vue'
-import SensorsMonitor from './Sensors/SensorsMonitor.vue'
+
+const activeTab = ref<'control' | 'info'>('control')
 </script>
