@@ -4,8 +4,9 @@
             <div class="flex-1">
                 <NodeCanvas />
             </div>
-            <div class="flex-1">
+            <div class="flex flex-1 flex-col gap-6">
                 <SensorCanvas />
+                <SensorsMonitor />
             </div>
         </div>
     </div>
@@ -13,4 +14,5 @@
 <script setup lang="ts">
 import NodeCanvas from './PresetControls/NodeCanvas.vue'
 import SensorCanvas from './Sensors/SensorCanvas.vue'
+import SensorsMonitor from './Sensors/SensorsMonitor.vue'
 </script>

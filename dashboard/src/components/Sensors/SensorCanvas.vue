@@ -12,6 +12,7 @@
 import { onMounted, onUnmounted, ref } from 'vue'
 import { Channel } from '@tauri-apps/api/core'
 import { commands } from '@/bindings'
+import { useSerialStore } from '@/stores/serial'
 
 interface Cell {
   label: string
@@ -33,6 +34,7 @@ type SensorFrame = {
 }
 
 const isMounted = ref(true)
+const serialStore = useSerialStore()
 
 const wavelengthEnumToNm = (wavelength: number): number => {
   switch (wavelength) {
@@ -72,12 +74,13 @@ onMounted(async () => {
     if (!isMounted.value) {
       return
     }
-    console.log(frame)
     applyFrame(frame)
   }
-  await commands.serialSetPort('/dev/ttyUSB0')
-  await commands.serialConnect();
-  await commands.subscribeSensorFrames(channel)
+  await serialStore.ensureConnected()
+  serialStore.unwrapCommandResult(
+    await commands.subscribeSensorFrames(channel),
+    'Failed to subscribe to photosensor frames',
+  )
 })
 
 onUnmounted(() => {

@@ -33,6 +33,10 @@ static uint32_t fakeUptimeStart = 0;
 static uint8_t currentWavelength = 0;
 static uint8_t ledEnabled[4] = {1, 1, 1, 1};
 static uint8_t ledBrightness[4] = {255, 255, 255, 255};
+static uint16_t mockWellTemp = 26;
+static int32_t mockAmbientTemp = 2265;
+static uint32_t mockPressure = 101325;
+static uint32_t mockHumidity = 45200;
 
 static uint8_t nextEnabledWavelength(uint8_t start) {
   for (uint8_t offset = 0; offset < 4; offset++) {
@@ -57,6 +61,21 @@ static uint32_t wavelengthSensorPattern(uint8_t wavelength, uint8_t sensorIndex,
     default:
       return 1000 + tick % 2000;
   }
+}
+
+static long clampLong(long value, long minValue, long maxValue) {
+  if (value < minValue) {
+    return minValue;
+  }
+  if (value > maxValue) {
+    return maxValue;
+  }
+  return value;
+}
+
+static long jitteredValue(long current, long minValue, long maxValue, long step) {
+  long delta = random(-step, step + 1);
+  return clampLong(current + delta, minValue, maxValue);
 }
 
 static uint8_t checksumFor(uint8_t frameId, const uint8_t *payload, size_t length) {
@@ -143,14 +162,16 @@ static void respondHardwareHealth() {
 
 static void respondEnv() {
   uint8_t payload[14] = {0};
-  uint16_t wellTemp = 250;
-  int32_t ambientTemp = 23000;
-  uint32_t pressure = 101325;
-  uint32_t humidity = 45000;
-  writeU16Le(&payload[0], wellTemp);
-  writeU32Le(&payload[2], (uint32_t)ambientTemp);
-  writeU32Le(&payload[6], pressure);
-  writeU32Le(&payload[10], humidity);
+
+  mockWellTemp = (uint16_t)jitteredValue(mockWellTemp, 22, 34, 1);
+  mockAmbientTemp = (int32_t)jitteredValue(mockAmbientTemp, 1950, 2850, 12);
+  mockPressure = (uint32_t)jitteredValue((long)mockPressure, 100200, 102200, 45);
+  mockHumidity = (uint32_t)jitteredValue((long)mockHumidity, 32000, 62000, 500);
+
+  writeU16Le(&payload[0], mockWellTemp);
+  writeU32Le(&payload[2], (uint32_t)mockAmbientTemp);
+  writeU32Le(&payload[6], mockPressure);
+  writeU32Le(&payload[10], mockHumidity);
   writeFrame(CMD_ENVIRONMENT_INFORMATION, payload, sizeof(payload));
 }
 
@@ -305,6 +326,7 @@ void setup() {
   while (!Serial) {
     delay(10);
   }
+  randomSeed(micros());
   fakeUptimeStart = millis();
 }
 

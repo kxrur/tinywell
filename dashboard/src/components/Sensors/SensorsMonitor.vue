@@ -1,93 +1,148 @@
 <template>
-    <div class="flex flex-col space-y-4 p-4 bg-background">
-        <div class="flex items-center justify-between">
-            <Label class="text-lg font-semibold">Sensors Monitor</Label>
+  <div class="flex flex-col gap-4 rounded-lg border bg-background p-4">
+    <div class="flex items-center justify-between">
+      <div>
+        <div class="flex items-center gap-2">
+          <Label class="text-lg font-semibold">Environment Monitor</Label>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger as-child>
+                <button type="button" class="text-muted-foreground transition-colors hover:text-foreground"
+                  :aria-label="lastUpdated ? `Last updated at ${lastUpdated}` : 'No telemetry received yet'">
+                  <Info class="size-4" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>
+                {{ lastUpdated ? `Updated at ${lastUpdated}` : 'No telemetry received yet' }}
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
-
-        <div class="border rounded-lg">
-            <Table>
-                <TableHeader>
-                    <TableRow>
-                        <TableHead class="w-[200px]">Sensor</TableHead>
-                        <TableHead>Current Value</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    <TableRow>
-                        <TableCell class="font-medium">
-                            <div class="flex items-center space-x-2">
-                                <div class="w-3 h-3 bg-red-500 rounded-full"></div>
-                                <span>Temperature (TEMP-01)</span>
-                            </div>
-                        </TableCell>
-                        <TableCell>
-                            <Badge variant="outline">{{ temperature.toFixed(1) }}°C</Badge>
-                        </TableCell>
-                    </TableRow>
-                    <TableRow>
-                        <TableCell class="font-medium">
-                            <div class="flex items-center space-x-2">
-                                <div class="w-3 h-3 bg-blue-500 rounded-full"></div>
-                                <span>Humidity (HUM-01)</span>
-                            </div>
-                        </TableCell>
-                        <TableCell>
-                            <Badge variant="outline">{{ humidity.toFixed(1) }}%</Badge>
-                        </TableCell>
-                    </TableRow>
-                    <TableRow>
-                        <TableCell class="font-medium">
-                            <div class="flex items-center space-x-2">
-                                <div class="w-3 h-3 bg-green-500 rounded-full"></div>
-                                <span>Pressure (PRES-01)</span>
-                            </div>
-                        </TableCell>
-                        <TableCell>
-                            <Badge variant="outline">{{ pressure.toFixed(0) }} hPa</Badge>
-                        </TableCell>
-                    </TableRow>
-                    <TableRow>
-                        <TableCell class="font-medium">
-                            <div class="flex items-center space-x-2">
-                                <div class="w-3 h-3 bg-amber-500 rounded-full"></div>
-                                <span>Light (LIGHT-01)</span>
-                            </div>
-                        </TableCell>
-                        <TableCell>
-                            <Badge variant="outline">{{ light.toFixed(0) }} lux</Badge>
-                        </TableCell>
-                    </TableRow>
-                </TableBody>
-            </Table>
-        </div>
+        <p class="text-sm text-muted-foreground">
+          Live `0x83` telemetry from the MSP serial protocol.
+        </p>
+      </div>
     </div>
+
+    <div class="overflow-hidden rounded-lg border">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead class="w-[220px]">Field</TableHead>
+            <TableHead>Display Value</TableHead>
+            <TableHead>Raw Value</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          <TableRow v-for="row in rows" :key="row.key">
+            <TableCell class="font-medium">{{ row.label }}</TableCell>
+            <TableCell>
+              <Badge variant="outline">{{ row.displayValue }}</Badge>
+            </TableCell>
+            <TableCell class="font-mono text-sm">{{ row.rawValue }}</TableCell>
+          </TableRow>
+        </TableBody>
+      </Table>
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
+import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { Channel } from '@tauri-apps/api/core'
+import { Info } from 'lucide-vue-next'
+import { commands } from '@/bindings'
+import { useSerialStore } from '@/stores/serial'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 
-const temperature = ref(23.5) // °C
-const humidity = ref(65.2)    // %
-const pressure = ref(1013.2)  // hPa
-const light = ref(450)        // lux
-const lastUpdated = ref('')
-
-
-// Functions
-const simulateReadings = () => {
-    temperature.value = 15 + Math.random() * 35 // 15-50°C
-    humidity.value = 30 + Math.random() * 70    // 30-100%
-    pressure.value = 950 + Math.random() * 150  // 950-1100 hPa
-    light.value = Math.random() * 1000          // 0-1000 lux
-    updateTimestamp()
+type EnvironmentFrame = {
+  wellTempC: number
+  ambientTempRaw: number
+  ambientPressureRaw: number
+  ambientHumidityRaw: number
 }
+
+const environment = ref<EnvironmentFrame | null>(null)
+const lastUpdated = ref('')
+const isMounted = ref(true)
+const serialStore = useSerialStore()
+
+const ambientTempC = computed(() =>
+  environment.value ? environment.value.ambientTempRaw / 100 : null,
+)
+
+const ambientPressureHpa = computed(() =>
+  environment.value ? environment.value.ambientPressureRaw / 100 : null,
+)
+
+const ambientHumidityPercent = computed(() =>
+  environment.value ? environment.value.ambientHumidityRaw / 1024 : null,
+)
+
+const rows = computed(() => {
+  if (!environment.value) {
+    return [
+      {
+        key: 'waiting',
+        label: 'Environment telemetry',
+        displayValue: 'No data yet',
+        rawValue: 'N/A',
+      },
+    ]
+  }
+
+  return [
+    {
+      key: 'well-temp',
+      label: 'Well Temp',
+      displayValue: `${environment.value.wellTempC} °C`,
+      rawValue: `${environment.value.wellTempC}`,
+    },
+    {
+      key: 'ambient-temp',
+      label: 'Ambient Temp',
+      displayValue: `${ambientTempC.value?.toFixed(2)} °C`,
+      rawValue: `${environment.value.ambientTempRaw} cC`,
+    },
+    {
+      key: 'ambient-pressure',
+      label: 'Ambient Pressure',
+      displayValue: `${ambientPressureHpa.value?.toFixed(2)} hPa`,
+      rawValue: `${environment.value.ambientPressureRaw} Pa`,
+    },
+    {
+      key: 'ambient-humidity',
+      label: 'Ambient Humidity',
+      displayValue: `${ambientHumidityPercent.value?.toFixed(2)} %RH`,
+      rawValue: `${environment.value.ambientHumidityRaw}`,
+    },
+  ]
+})
 
 const updateTimestamp = () => {
-    const now = new Date()
-    lastUpdated.value = now.toLocaleTimeString()
+  const now = new Date()
+  lastUpdated.value = now.toLocaleTimeString()
 }
 
-// Initialize
-onMounted(() => {
-    simulateReadings()
+onMounted(async () => {
+  const channel = new Channel<EnvironmentFrame>()
+  channel.onmessage = (frame) => {
+    if (!isMounted.value) {
+      return
+    }
+
+    environment.value = frame
+    updateTimestamp()
+  }
+
+  await serialStore.ensureConnected()
+  serialStore.unwrapCommandResult(
+    await commands.subscribeEnvironmentFrames(channel),
+    'Failed to subscribe to environment telemetry',
+  )
+})
+
+onUnmounted(() => {
+  isMounted.value = false
 })
 </script>

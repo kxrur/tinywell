@@ -85,6 +85,15 @@ pub struct SensorFrame {
     pub wavelength: u8,
 }
 
+#[derive(Clone, Debug, Serialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct EnvironmentFrame {
+    pub well_temp_c: u16,
+    pub ambient_temp_raw: i32,
+    pub ambient_pressure_raw: u32,
+    pub ambient_humidity_raw: u32,
+}
+
 #[tauri::command]
 #[specta::specta]
 pub fn subscribe_sensor_frames(
@@ -103,13 +112,63 @@ pub fn subscribe_sensor_frames(
 
         match response {
             Ok(SerialResponse::PhotosensorResults { wavelength, values }) => {
-                let _ = channel.send(SensorFrame { values, wavelength });
+                if channel.send(SensorFrame { values, wavelength }).is_err() {
+                    info!("Sensor frame subscription ended");
+                    break;
+                }
             }
             Ok(other) => {
                 warn!("Sensor frame fetch unexpected response: {:?}", other);
             }
             Err(err) => {
                 warn!("Sensor frame fetch failed: {}", err);
+            }
+        }
+
+        std::thread::sleep(Duration::from_millis(500));
+    });
+
+    Ok(())
+}
+
+#[tauri::command]
+#[specta::specta]
+pub fn subscribe_environment_frames(
+    state: tauri::State<'_, Mutex<AppState>>,
+    channel: Channel<EnvironmentFrame>,
+) -> Result<(), String> {
+    let serial = serial_manager(&state)?;
+
+    info!("Environment frame subscription started");
+
+    std::thread::spawn(move || loop {
+        let response =
+            serial.send_request(SerialRequest::EnvironmentInfo, Duration::from_millis(1500));
+
+        match response {
+            Ok(SerialResponse::EnvironmentInfo {
+                well_temp,
+                ambient_temp,
+                ambient_pressure,
+                ambient_humidity,
+            }) => {
+                let frame = EnvironmentFrame {
+                    well_temp_c: well_temp,
+                    ambient_temp_raw: ambient_temp,
+                    ambient_pressure_raw: ambient_pressure,
+                    ambient_humidity_raw: ambient_humidity,
+                };
+
+                if channel.send(frame).is_err() {
+                    info!("Environment frame subscription ended");
+                    break;
+                }
+            }
+            Ok(other) => {
+                warn!("Environment frame fetch unexpected response: {:?}", other);
+            }
+            Err(err) => {
+                warn!("Environment frame fetch failed: {}", err);
             }
         }
 

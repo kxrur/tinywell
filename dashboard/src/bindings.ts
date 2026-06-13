@@ -63,6 +63,14 @@ async subscribeSensorFrames(channel: TAURI_CHANNEL<SensorFrame>) : Promise<Resul
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
 }
+},
+async subscribeEnvironmentFrames(channel: TAURI_CHANNEL<EnvironmentFrame>) : Promise<Result<null, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("subscribe_environment_frames", { channel }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
 }
 }
 
@@ -77,6 +85,7 @@ async subscribeSensorFrames(channel: TAURI_CHANNEL<SensorFrame>) : Promise<Resul
 /** user-defined types **/
 
 export type ConnectionStatus = "Disconnected" | "Connecting" | { Connected: { port: string } }
+export type EnvironmentFrame = { wellTempC: number; ambientTempC: number; ambientPressureHpa: number; ambientHumidityPercent: number; ambientPressureRaw: number; ambientHumidityRaw: number }
 export type LedAction = "Off" | "On" | "Toggle" | "SetBrightness"
 export type SensorFrame = { values: number[]; wavelength: number }
 export type SerialRequest = "Ping" | "SystemStatus" | "EnvironmentInfo" | "PhotosensorResults" | { SetLedState: { wavelength: number; action: LedAction; brightness: number } }

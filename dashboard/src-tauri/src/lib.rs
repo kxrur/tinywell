@@ -17,7 +17,7 @@ mod test;
 
 use crate::app::serial_app::{
     greet, serial_connect, serial_disconnect, serial_list_ports, serial_send, serial_set_port,
-    serial_status, subscribe_sensor_frames,
+    serial_status, subscribe_environment_frames, subscribe_sensor_frames,
 };
 use crate::state::AppState;
 
@@ -35,7 +35,8 @@ pub fn run() {
         serial_status,
         serial_list_ports,
         serial_send,
-        subscribe_sensor_frames
+        subscribe_sensor_frames,
+        subscribe_environment_frames
     ]);
 
     #[cfg(debug_assertions)] // <- Only export on non-release builds

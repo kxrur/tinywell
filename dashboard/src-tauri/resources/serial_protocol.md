@@ -186,16 +186,32 @@ Example target response payload for `pump = 300`, `heater = 400`, `vref = 500`:
 
 Field semantics:
 
-- `well_temp`: result of `LMT01_Read()`, cast to `u16` before storage
+- `well_temp`: Celsius value derived from the LMT01 pulse-count output, then truncated/cast into `u16` by firmware
 - `ambient_temp`: compensated BME280 temperature integer
 - `ambient_pressure`: compensated BME280 pressure integer
 - `ambient_humidity`: compensated BME280 humidity integer
 
 More specifically:
 
-- `LMT01_Read()` computes a Celsius value and the result is truncated when stored into the `u16` register field
+- `LMT01_Read()` converts the LMT01 pulse count into Celsius and the result is truncated when stored into the `u16` register field
 - `ambient_temp` is stored in centi-degrees Celsius
-- `ambient_pressure` and `ambient_humidity` are raw compensated BME280 integer outputs, not normalized engineering units in the serial layer
+- `ambient_pressure` is stored in Pascals
+- `ambient_humidity` is stored in BME280 fixed-point humidity units where `1024 = 1 %RH`
+
+Display conversions:
+
+- `well_temp_c = well_temp`
+- `ambient_temp_c = ambient_temp / 100`
+- `ambient_pressure_hpa = ambient_pressure / 100`
+- `ambient_humidity_percent = ambient_humidity / 1024`
+
+Bosch BME280 datasheet traceability:
+
+[doc](https://gebrabit.com/wp-content/uploads/2024/09/GebraBit-BME280-Datasheet.pdf)
+
+- Temperature: page 25 states the compensated integer output has `0.01 DegC` resolution and gives `5123 -> 51.23 DegC`
+- Pressure: page 25 states the compensated pressure output is in `Pa`; page 50 gives `96386 -> 96386 Pa = 963.86 hPa`
+- Humidity: page 25 states the compensated humidity output is `%RH` in `Q22.10` format and gives `47445 / 1024 = 46.333 %RH`
 
 **Response Frame**
 
