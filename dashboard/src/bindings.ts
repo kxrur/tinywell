@@ -90,14 +90,13 @@ export type LedAction = "Off" | "On" | "Toggle" | "SetBrightness"
 export type SensorFrame = { values: number[]; wavelength: number }
 export type SerialRequest = "Ping" | "SystemStatus" | "EnvironmentInfo" | "PhotosensorResults" | { SetLedState: { wavelength: number; action: LedAction; brightness: number } }
 export type SerialResponse = "Ping" | { SystemStatus: { fw: number; state: number; uptime: number } } | { EnvironmentInfo: { well_temp: number; ambient_temp: number; ambient_pressure: number; ambient_humidity: number } } | { PhotosensorResults: { wavelength: number; values: number[] } } | { TelecommandAck: { tc_id: number; tc_result: number } } | { Error: { code: number } } | { Unknown: { frame_id: number; payload: number[] } }
-export type TAURI_CHANNEL<TSend> = TauriChannel<TSend>
+export type TAURI_CHANNEL<TSend> = null
 
 /** tauri-specta globals **/
 
 import {
 	invoke as TAURI_INVOKE,
-	Channel as TAURI_CHANNEL_CLASS,
-	type Channel as TauriChannel,
+	Channel as TAURI_CHANNEL,
 } from "@tauri-apps/api/core";
 import * as TAURI_API_EVENT from "@tauri-apps/api/event";
 import { type WebviewWindow as __WebviewWindow__ } from "@tauri-apps/api/webviewWindow";

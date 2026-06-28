@@ -8,6 +8,7 @@ use tauri::Manager;
 use tauri_specta::*;
 
 mod app;
+mod database;
 mod model;
 mod serial;
 mod state;
@@ -19,6 +20,7 @@ use crate::app::serial_app::{
     greet, serial_connect, serial_disconnect, serial_list_ports, serial_send, serial_set_port,
     serial_status, subscribe_environment_frames, subscribe_sensor_frames,
 };
+use crate::database::sqlite::init_database;
 use crate::state::AppState;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -53,7 +55,7 @@ pub fn run() {
 
             builder.mount_events(app);
 
-            //init_database(app.app_handle())?;
+            init_database(app.app_handle())?;
 
             Ok(())
         })
