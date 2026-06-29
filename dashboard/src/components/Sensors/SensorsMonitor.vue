@@ -1,5 +1,7 @@
 <template>
-  <div class="inline-flex max-w-full self-center flex-col gap-4 rounded-lg border bg-background p-4">
+  <div
+    class="inline-flex max-w-full self-center flex-col gap-4 rounded-lg border bg-background p-4"
+  >
     <div class="flex items-center justify-between">
       <div>
         <div class="flex items-center gap-2">
@@ -7,13 +9,24 @@
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger as-child>
-                <button type="button" class="text-muted-foreground transition-colors hover:text-foreground"
-                  :aria-label="lastUpdated ? `Last updated at ${lastUpdated}` : 'No telemetry received yet'">
+                <button
+                  type="button"
+                  class="text-muted-foreground transition-colors hover:text-foreground"
+                  :aria-label="
+                    lastUpdated
+                      ? `Last updated at ${lastUpdated}`
+                      : 'No telemetry received yet'
+                  "
+                >
                   <Info class="size-4" />
                 </button>
               </TooltipTrigger>
               <TooltipContent>
-                {{ lastUpdated ? `Updated at ${lastUpdated}` : 'No telemetry received yet' }}
+                {{
+                  lastUpdated
+                    ? `Updated at ${lastUpdated}`
+                    : 'No telemetry received yet'
+                }}
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
@@ -24,7 +37,9 @@
       </div>
     </div>
 
-    <div class="inline-block max-w-full self-center overflow-hidden rounded-lg border">
+    <div
+      class="inline-block max-w-full self-center overflow-hidden rounded-lg border"
+    >
       <Table>
         <TableHeader>
           <TableRow>
@@ -125,7 +140,7 @@ const updateTimestamp = () => {
 
 onMounted(async () => {
   const channel = new Channel<EnvironmentFrame>()
-  channel.onmessage = (frame) => {
+  channel.onmessage = frame => {
     if (!isMounted.value) {
       return
     }

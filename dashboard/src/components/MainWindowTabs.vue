@@ -20,19 +20,19 @@
 </template>
 
 <script setup lang="ts">
-type TabValue = "control" | "info" | "history";
+type TabValue = 'control' | 'info' | 'history'
 
 defineProps<{
-  modelValue: TabValue;
-}>();
+  modelValue: TabValue
+}>()
 
 const emit = defineEmits<{
-  (event: "update:modelValue", value: TabValue): void;
-}>();
+  (event: 'update:modelValue', value: TabValue): void
+}>()
 
 const tabs: { label: string; value: TabValue }[] = [
-  { label: "Control", value: "control" },
-  { label: "Info", value: "info" },
-  { label: "History", value: "history" },
-];
+  { label: 'Control', value: 'control' },
+  { label: 'Info', value: 'info' },
+  { label: 'History', value: 'history' },
+]
 </script>

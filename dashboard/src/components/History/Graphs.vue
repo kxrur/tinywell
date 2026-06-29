@@ -65,7 +65,7 @@
           <h3 class="text-lg font-semibold">Photosensors</h3>
           <p class="text-sm text-muted-foreground">
             All 14 sensor channels on one scatter chart. Latest wavelength:
-            {{ sensorWavelengthLabel ?? "unknown" }} nm
+            {{ sensorWavelengthLabel ?? 'unknown' }} nm
           </p>
         </div>
         <p class="text-sm text-muted-foreground">
@@ -79,21 +79,21 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, provide, ref } from "vue";
-import { CanvasRenderer } from "echarts/renderers";
-import { ScatterChart } from "echarts/charts";
+import { computed, onMounted, provide, ref } from 'vue'
+import { CanvasRenderer } from 'echarts/renderers'
+import { ScatterChart } from 'echarts/charts'
 import {
   GridComponent,
   LegendComponent,
   TitleComponent,
   TooltipComponent,
-} from "echarts/components";
-import { registerTheme, use } from "echarts/core";
-import VChart, { THEME_KEY } from "vue-echarts";
-import { useHistoryStore } from "@/stores/history";
-import light from "@/theme/echarts/light.json";
+} from 'echarts/components'
+import { registerTheme, use } from 'echarts/core'
+import VChart, { THEME_KEY } from 'vue-echarts'
+import { useHistoryStore } from '@/stores/history'
+import light from '@/theme/echarts/light.json'
 
-registerTheme("light", light);
+registerTheme('light', light)
 
 use([
   CanvasRenderer,
@@ -102,27 +102,27 @@ use([
   LegendComponent,
   TitleComponent,
   TooltipComponent,
-]);
+])
 
-provide(THEME_KEY, "dark");
+provide(THEME_KEY, 'dark')
 
-type HistoryPoint = [number, number];
+type HistoryPoint = [number, number]
 type EChartsSeries = {
-  name: string;
-  type: "scatter";
-  data: HistoryPoint[];
-  symbolSize: number;
-};
+  name: string
+  type: 'scatter'
+  data: HistoryPoint[]
+  symbolSize: number
+}
 
-const historyStore = useHistoryStore();
-const streamError = ref("");
+const historyStore = useHistoryStore()
+const streamError = ref('')
 
 const formatTimestamp = (value: number) =>
   new Date(value).toLocaleTimeString([], {
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-  });
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+  })
 
 const buildMultiSeriesOption = (
   title: string,
@@ -131,7 +131,7 @@ const buildMultiSeriesOption = (
 ) => ({
   title: {
     text: title,
-    left: "center",
+    left: 'center',
     top: 0,
     textStyle: {
       fontSize: 14,
@@ -139,7 +139,7 @@ const buildMultiSeriesOption = (
     },
   },
   legend: {
-    type: "scroll",
+    type: 'scroll',
     top: 28,
     left: 10,
     right: 10,
@@ -152,107 +152,107 @@ const buildMultiSeriesOption = (
     containLabel: true,
   },
   tooltip: {
-    trigger: "item",
+    trigger: 'item',
     formatter: (params: { seriesName: string; value: [number, number] }) => {
-      const [timestamp, value] = params.value;
-      return `${params.seriesName}<br/>${formatTimestamp(timestamp)}<br/>${value.toLocaleString()} ${unit}`;
+      const [timestamp, value] = params.value
+      return `${params.seriesName}<br/>${formatTimestamp(timestamp)}<br/>${value.toLocaleString()} ${unit}`
     },
   },
   xAxis: {
-    type: "time",
+    type: 'time',
     axisLabel: {
       formatter: (value: number) => formatTimestamp(value),
     },
   },
   yAxis: {
-    type: "value",
+    type: 'value',
     name: unit,
-    nameLocation: "middle",
+    nameLocation: 'middle',
     nameGap: 34,
     splitLine: {
       lineStyle: {
-        color: "rgba(148, 163, 184, 0.18)",
+        color: 'rgba(148, 163, 184, 0.18)',
       },
     },
   },
   series,
-});
+})
 
 const temperatureOption = computed(() =>
-  buildMultiSeriesOption("Temperature history", "°C", [
+  buildMultiSeriesOption('Temperature history', '°C', [
     {
-      name: "Well temp",
-      type: "scatter",
+      name: 'Well temp',
+      type: 'scatter',
       data: historyStore.environmentHistory.wellTempC,
       symbolSize: 7,
     },
     {
-      name: "Ambient temp",
-      type: "scatter",
+      name: 'Ambient temp',
+      type: 'scatter',
       data: historyStore.environmentHistory.ambientTempC,
       symbolSize: 7,
     },
   ]),
-);
+)
 
 const pressureOption = computed(() =>
-  buildMultiSeriesOption("Ambient pressure", "hPa", [
+  buildMultiSeriesOption('Ambient pressure', 'hPa', [
     {
-      name: "Pressure",
-      type: "scatter",
+      name: 'Pressure',
+      type: 'scatter',
       data: historyStore.environmentHistory.ambientPressureHpa,
       symbolSize: 7,
     },
   ]),
-);
+)
 
 const humidityOption = computed(() =>
-  buildMultiSeriesOption("Ambient humidity", "%RH", [
+  buildMultiSeriesOption('Ambient humidity', '%RH', [
     {
-      name: "Humidity",
-      type: "scatter",
+      name: 'Humidity',
+      type: 'scatter',
       data: historyStore.environmentHistory.ambientHumidityPct,
       symbolSize: 7,
     },
   ]),
-);
+)
 
 const sensorOption = computed(() =>
   buildMultiSeriesOption(
-    "Photosensor history",
-    "raw",
+    'Photosensor history',
+    'raw',
     historyStore.sensorHistory.map((points, index) => ({
       name: `Sensor ${index + 1}`,
-      type: "scatter" as const,
+      type: 'scatter' as const,
       data: points,
       symbolSize: 6,
     })),
   ),
-);
+)
 
 const environmentPointCount = computed(() =>
   Object.values(historyStore.environmentHistory).reduce(
     (sum, series) => sum + series.length,
     0,
   ),
-);
+)
 
 const sensorPointCount = computed(() =>
   historyStore.sensorHistory.reduce((sum, series) => sum + series.length, 0),
-);
+)
 
-const sensorWavelengthLabel = computed(() => historyStore.sensorWavelengthNm);
+const sensorWavelengthLabel = computed(() => historyStore.sensorWavelengthNm)
 
 onMounted(async () => {
   try {
-    await historyStore.ensureStreaming();
+    await historyStore.ensureStreaming()
   } catch (error) {
     streamError.value =
       error instanceof Error
         ? error.message
-        : "Failed to start telemetry history";
+        : 'Failed to start telemetry history'
   }
-});
+})
 </script>
 
 <style scoped>

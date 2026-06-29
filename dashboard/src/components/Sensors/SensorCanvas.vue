@@ -26,17 +26,17 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from "vue";
-import { Channel } from "@tauri-apps/api/core";
-import { commands } from "@/bindings";
-import { useSerialStore } from "@/stores/serial";
-import { wavelengthEnumToNm } from "@/stores/history";
+import { onMounted, onUnmounted, ref } from 'vue'
+import { Channel } from '@tauri-apps/api/core'
+import { commands } from '@/bindings'
+import { useSerialStore } from '@/stores/serial'
+import { wavelengthEnumToNm } from '@/stores/history'
 
 interface Cell {
-  label: string;
-  value: number;
-  active: boolean;
-  wavelength: number;
+  label: string
+  value: number
+  active: boolean
+  wavelength: number
 }
 
 const cells = ref<Cell[]>(
@@ -46,55 +46,55 @@ const cells = ref<Cell[]>(
     active: true,
     wavelength: 470,
   })),
-);
+)
 
 type SensorFrame = {
-  values: number[];
-  wavelength: number;
-};
+  values: number[]
+  wavelength: number
+}
 
-const isMounted = ref(true);
-const serialStore = useSerialStore();
+const isMounted = ref(true)
+const serialStore = useSerialStore()
 const layoutRows = [
   [null, 0, 1, 2],
   [3, 4, 5, 6],
   [7, 8, 9, 10],
   [null, 11, 12, 13],
-] as const;
+] as const
 
 const applyFrame = (frame: SensorFrame) => {
-  const displayWavelength = wavelengthEnumToNm(frame.wavelength);
-  const maxValue = Math.max(...frame.values, 1);
+  const displayWavelength = wavelengthEnumToNm(frame.wavelength)
+  const maxValue = Math.max(...frame.values, 1)
 
   cells.value = cells.value.map((cell, index) => {
-    const hasReading = index < frame.values.length;
-    const raw = frame.values[index] ?? 0;
-    const normalized = Math.round((raw / maxValue) * 100);
+    const hasReading = index < frame.values.length
+    const raw = frame.values[index] ?? 0
+    const normalized = Math.round((raw / maxValue) * 100)
     return {
       ...cell,
       value: hasReading ? normalized : 0,
       wavelength: hasReading ? displayWavelength : cell.wavelength,
       active: hasReading,
-    };
-  });
-};
+    }
+  })
+}
 
 onMounted(async () => {
-  const channel = new Channel<SensorFrame>();
-  channel.onmessage = (frame) => {
+  const channel = new Channel<SensorFrame>()
+  channel.onmessage = frame => {
     if (!isMounted.value) {
-      return;
+      return
     }
-    applyFrame(frame);
-  };
-  await serialStore.ensureConnected();
+    applyFrame(frame)
+  }
+  await serialStore.ensureConnected()
   serialStore.unwrapCommandResult(
     await commands.subscribeSensorFrames(channel),
-    "Failed to subscribe to photosensor frames",
-  );
-});
+    'Failed to subscribe to photosensor frames',
+  )
+})
 
 onUnmounted(() => {
-  isMounted.value = false;
-});
+  isMounted.value = false
+})
 </script>

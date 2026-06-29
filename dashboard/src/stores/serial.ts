@@ -4,7 +4,10 @@ import { commands, type ConnectionStatus, type Result } from '@/bindings'
 
 const DEFAULT_SERIAL_PORT = '/dev/ttyUSB0'
 
-function unwrapResult<T>(result: Result<T, string>, fallbackMessage: string): T {
+function unwrapResult<T>(
+  result: Result<T, string>,
+  fallbackMessage: string,
+): T {
   if (result.status === 'error') {
     throw new Error(result.error ?? fallbackMessage)
   }
@@ -26,7 +29,9 @@ export const useSerialStore = defineStore('serial', () => {
   const connectPromise = ref<Promise<void> | null>(null)
 
   const connectedPort = computed(() =>
-    typeof status.value === 'object' && status.value !== null && 'Connected' in status.value
+    typeof status.value === 'object' &&
+    status.value !== null &&
+    'Connected' in status.value
       ? status.value.Connected.port
       : null,
   )
@@ -55,7 +60,7 @@ export const useSerialStore = defineStore('serial', () => {
         return
       }
 
-      await new Promise((resolve) => window.setTimeout(resolve, 150))
+      await new Promise(resolve => window.setTimeout(resolve, 150))
     }
 
     throw new Error('Timed out waiting for serial connection')
@@ -79,7 +84,10 @@ export const useSerialStore = defineStore('serial', () => {
       }
 
       await setPort(port)
-      unwrapResult(await commands.serialConnect(), 'Failed to connect to the serial device')
+      unwrapResult(
+        await commands.serialConnect(),
+        'Failed to connect to the serial device',
+      )
       await refreshStatus()
     })()
 
@@ -90,7 +98,10 @@ export const useSerialStore = defineStore('serial', () => {
     }
   }
 
-  function unwrapCommandResult<T>(result: Result<T, string>, fallbackMessage: string): T {
+  function unwrapCommandResult<T>(
+    result: Result<T, string>,
+    fallbackMessage: string,
+  ): T {
     return unwrapResult(result, fallbackMessage)
   }
 

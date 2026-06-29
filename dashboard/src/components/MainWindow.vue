@@ -22,5 +22,5 @@
   </div>
 </template>
 <script setup lang="ts">
-const activeTab = ref<"control" | "info" | "history">("control");
+const activeTab = ref<'control' | 'info' | 'history'>('control')
 </script>
