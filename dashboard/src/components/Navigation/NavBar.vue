@@ -24,7 +24,9 @@
         </div>
       </SidebarContent>
 
-      <SidebarFooter class="border-t border-border p-4">
+      <SidebarFooter class="p-4">
+        <SerialDeviceConnect />
+        <Separator class="my-4" />
         <Button class="w-full justify-center gap-2" variant="default">
           <Plus class="w-4 h-4" />
           <span>Add Preset</span>

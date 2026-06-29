@@ -98,6 +98,14 @@ export const useSerialStore = defineStore('serial', () => {
     }
   }
 
+  async function disconnect(): Promise<void> {
+    unwrapResult(
+      await commands.serialDisconnect(),
+      'Failed to disconnect from the serial device',
+    )
+    await refreshStatus()
+  }
+
   function unwrapCommandResult<T>(
     result: Result<T, string>,
     fallbackMessage: string,
@@ -109,6 +117,7 @@ export const useSerialStore = defineStore('serial', () => {
     status,
     configuredPort,
     connectedPort,
+    disconnect,
     ensureConnected,
     refreshStatus,
     setPort,
