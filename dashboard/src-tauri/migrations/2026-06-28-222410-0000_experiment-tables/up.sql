@@ -1,6 +1,7 @@
 -- Your SQL goes here
 CREATE TABLE experiments (
-  id INTEGER PRIMARY KEY
+  id INTEGER PRIMARY KEY,
+  name TEXT NOT NULL
 );
 
 CREATE TABLE data (

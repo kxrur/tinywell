@@ -14,6 +14,7 @@ diesel::table! {
 diesel::table! {
     experiments (id) {
         id -> Nullable<Integer>,
+        name -> Text,
     }
 }
 
