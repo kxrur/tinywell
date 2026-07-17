@@ -32,8 +32,17 @@
   </div>
 </template>
 <script setup lang="ts">
+import { watch } from 'vue'
 import { useExperimentStore } from '@/stores/experiments'
+import { useHistoryStore } from '@/stores/history'
 
 const activeTab = ref<'control' | 'info' | 'history'>('control')
 const experimentStore = useExperimentStore()
+const historyStore = useHistoryStore()
+
+watch(activeTab, tab => {
+  if (tab === 'info' || tab === 'history') {
+    historyStore.ensureStreaming().catch(() => {})
+  }
+})
 </script>

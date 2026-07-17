@@ -26,11 +26,8 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from 'vue'
-import { Channel } from '@tauri-apps/api/core'
-import { commands } from '@/bindings'
-import { useSerialStore } from '@/stores/serial'
-import { wavelengthEnumToNm } from '@/stores/history'
+import { ref, watch } from 'vue'
+import { useHistoryStore, wavelengthEnumToNm } from '@/stores/history'
 
 interface Cell {
   label: string
@@ -53,8 +50,7 @@ type SensorFrame = {
   wavelength: number
 }
 
-const isMounted = ref(true)
-const serialStore = useSerialStore()
+const historyStore = useHistoryStore()
 const layoutRows = [
   [null, 0, 1, 2],
   [3, 4, 5, 6],
@@ -79,22 +75,13 @@ const applyFrame = (frame: SensorFrame) => {
   })
 }
 
-onMounted(async () => {
-  const channel = new Channel<SensorFrame>()
-  channel.onmessage = frame => {
-    if (!isMounted.value) {
-      return
+watch(
+  () => historyStore.latestSensorFrame,
+  frame => {
+    if (frame) {
+      applyFrame(frame)
     }
-    applyFrame(frame)
-  }
-  await serialStore.ensureConnected()
-  serialStore.unwrapCommandResult(
-    await commands.subscribeSensorFrames(channel),
-    'Failed to subscribe to photosensor frames',
-  )
-})
-
-onUnmounted(() => {
-  isMounted.value = false
-})
+  },
+  { immediate: true },
+)
 </script>

@@ -36,8 +36,10 @@ export const useHistoryStore = defineStore('history', () => {
   const serialStore = useSerialStore()
   const isStreaming = ref(false)
   const startPromise = ref<Promise<void> | null>(null)
+  const streamError = ref('')
   const latestSensorWavelength = ref<number | null>(null)
   const latestEnvironmentFrame = ref<EnvironmentFrame | null>(null)
+  const latestEnvironmentReceivedAt = ref<number | null>(null)
   const latestSensorFrame = ref<SensorFrame | null>(null)
 
   const environmentHistory = reactive({
@@ -66,6 +68,7 @@ export const useHistoryStore = defineStore('history', () => {
       return
     }
 
+    streamError.value = ''
     startPromise.value = (async () => {
       await serialStore.ensureConnected()
 
@@ -85,6 +88,7 @@ export const useHistoryStore = defineStore('history', () => {
         latestEnvironmentFrame.value = frame
 
         const timestamp = Date.now()
+        latestEnvironmentReceivedAt.value = timestamp
         appendPoint(environmentHistory.wellTempC, [timestamp, frame.wellTempC])
         appendPoint(environmentHistory.ambientTempC, [
           timestamp,
@@ -114,6 +118,10 @@ export const useHistoryStore = defineStore('history', () => {
 
     try {
       await startPromise.value
+    } catch (error) {
+      streamError.value =
+        error instanceof Error ? error.message : 'Failed to start telemetry stream'
+      throw error
     } finally {
       startPromise.value = null
     }
@@ -126,6 +134,7 @@ export const useHistoryStore = defineStore('history', () => {
     environmentHistory.ambientHumidityPct.splice(0)
     sensorHistory.forEach(series => series.splice(0))
     latestEnvironmentFrame.value = null
+    latestEnvironmentReceivedAt.value = null
     latestSensorFrame.value = null
     latestSensorWavelength.value = null
   }
@@ -136,9 +145,11 @@ export const useHistoryStore = defineStore('history', () => {
     environmentHistory,
     isStreaming,
     latestEnvironmentFrame,
+    latestEnvironmentReceivedAt,
     latestSensorFrame,
     latestSensorWavelength,
     sensorHistory,
     sensorWavelengthNm,
+    streamError,
   }
 })

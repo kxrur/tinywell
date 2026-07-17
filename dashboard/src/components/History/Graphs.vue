@@ -79,7 +79,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, provide, ref } from 'vue'
+import { computed, provide } from 'vue'
 import { CanvasRenderer } from 'echarts/renderers'
 import { ScatterChart } from 'echarts/charts'
 import {
@@ -115,7 +115,7 @@ type EChartsSeries = {
 }
 
 const historyStore = useHistoryStore()
-const streamError = ref('')
+const streamError = computed(() => historyStore.streamError)
 
 const formatTimestamp = (value: number) =>
   new Date(value).toLocaleTimeString([], {
@@ -243,16 +243,6 @@ const sensorPointCount = computed(() =>
 
 const sensorWavelengthLabel = computed(() => historyStore.sensorWavelengthNm)
 
-onMounted(async () => {
-  try {
-    await historyStore.ensureStreaming()
-  } catch (error) {
-    streamError.value =
-      error instanceof Error
-        ? error.message
-        : 'Failed to start telemetry history'
-  }
-})
 </script>
 
 <style scoped>

@@ -3,6 +3,7 @@ use std::sync::Arc;
 use diesel::SqliteConnection;
 
 use crate::serial::SerialManager;
+use crate::telemetry::TelemetryManager;
 
 #[derive(Default)]
 pub struct AppState {
@@ -10,6 +11,7 @@ pub struct AppState {
     pub db_connection: Option<SqliteConnection>,
     pub active_experiment_id: Option<i32>,
     pub serial: Arc<SerialManager>,
+    pub telemetry: Arc<TelemetryManager>,
 }
 
 impl AppState {

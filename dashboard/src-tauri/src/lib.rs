@@ -12,6 +12,7 @@ mod database;
 mod model;
 mod serial;
 mod state;
+mod telemetry;
 
 #[cfg(test)]
 mod test;

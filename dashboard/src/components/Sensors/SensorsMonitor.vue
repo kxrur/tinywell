@@ -63,23 +63,17 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from 'vue'
-import { Channel } from '@tauri-apps/api/core'
+import { computed } from 'vue'
 import { Info } from 'lucide-vue-next'
-import { commands } from '@/bindings'
-import { useSerialStore } from '@/stores/serial'
+import { useHistoryStore } from '@/stores/history'
 
-type EnvironmentFrame = {
-  wellTempC: number
-  ambientTempRaw: number
-  ambientPressureRaw: number
-  ambientHumidityRaw: number
-}
-
-const environment = ref<EnvironmentFrame | null>(null)
-const lastUpdated = ref('')
-const isMounted = ref(true)
-const serialStore = useSerialStore()
+const historyStore = useHistoryStore()
+const environment = computed(() => historyStore.latestEnvironmentFrame)
+const lastUpdated = computed(() =>
+  historyStore.latestEnvironmentReceivedAt === null
+    ? ''
+    : new Date(historyStore.latestEnvironmentReceivedAt).toLocaleTimeString(),
+)
 
 const ambientTempC = computed(() =>
   environment.value ? environment.value.ambientTempRaw / 100 : null,
@@ -131,32 +125,5 @@ const rows = computed(() => {
       rawValue: `${environment.value.ambientHumidityRaw}`,
     },
   ]
-})
-
-const updateTimestamp = () => {
-  const now = new Date()
-  lastUpdated.value = now.toLocaleTimeString()
-}
-
-onMounted(async () => {
-  const channel = new Channel<EnvironmentFrame>()
-  channel.onmessage = frame => {
-    if (!isMounted.value) {
-      return
-    }
-
-    environment.value = frame
-    updateTimestamp()
-  }
-
-  await serialStore.ensureConnected()
-  serialStore.unwrapCommandResult(
-    await commands.subscribeEnvironmentFrames(channel),
-    'Failed to subscribe to environment telemetry',
-  )
-})
-
-onUnmounted(() => {
-  isMounted.value = false
 })
 </script>
