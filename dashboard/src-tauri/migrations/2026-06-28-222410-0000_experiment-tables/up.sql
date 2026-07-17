@@ -7,6 +7,7 @@ CREATE TABLE experiments (
 CREATE TABLE data (
   id INTEGER PRIMARY KEY,
   experiment_id INTEGER NOT NULL,
+  captured_at_ms BIGINT NOT NULL,
   well_temperature_c REAL NOT NULL,
   ambient_temperature_c REAL NOT NULL,
   ambient_pressure_pa REAL NOT NULL,
@@ -17,6 +18,7 @@ CREATE TABLE data (
 CREATE TABLE well_readings (
   id INTEGER PRIMARY KEY,
   experiment_id INTEGER NOT NULL,
+  captured_at_ms BIGINT NOT NULL,
   wavelength_nm REAL NOT NULL,
   well_1_intensity REAL NOT NULL,
   well_2_intensity REAL NOT NULL,
@@ -34,3 +36,9 @@ CREATE TABLE well_readings (
   well_14_intensity REAL NOT NULL,
   FOREIGN KEY (experiment_id) REFERENCES experiments(id)
 );
+
+CREATE INDEX data_experiment_captured_at_idx
+  ON data (experiment_id, captured_at_ms);
+
+CREATE INDEX well_readings_experiment_captured_at_idx
+  ON well_readings (experiment_id, captured_at_ms);

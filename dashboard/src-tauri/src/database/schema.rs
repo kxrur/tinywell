@@ -4,6 +4,7 @@ diesel::table! {
     data (id) {
         id -> Nullable<Integer>,
         experiment_id -> Integer,
+        captured_at_ms -> BigInt,
         well_temperature_c -> Float,
         ambient_temperature_c -> Float,
         ambient_pressure_pa -> Float,
@@ -22,6 +23,7 @@ diesel::table! {
     well_readings (id) {
         id -> Nullable<Integer>,
         experiment_id -> Integer,
+        captured_at_ms -> BigInt,
         wavelength_nm -> Float,
         well_1_intensity -> Float,
         well_2_intensity -> Float,

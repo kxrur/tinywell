@@ -8,6 +8,30 @@ export const commands = {
 async greet(name: string) : Promise<string> {
     return await TAURI_INVOKE("greet", { name });
 },
+async experimentCreate(name: string) : Promise<Result<Experiment, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("experiment_create", { name }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async experimentList() : Promise<Result<Experiment[], string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("experiment_list") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async experimentSetActive(experimentId: number) : Promise<Result<null, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("experiment_set_active", { experimentId }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
 async serialSetPort(port: string) : Promise<Result<null, string>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("serial_set_port", { port }) };
@@ -86,6 +110,7 @@ async subscribeEnvironmentFrames(channel: TAURI_CHANNEL<EnvironmentFrame>) : Pro
 
 export type ConnectionStatus = "Disconnected" | "Connecting" | { Connected: { port: string } }
 export type EnvironmentFrame = { wellTempC: number; ambientTempRaw: number; ambientPressureRaw: number; ambientHumidityRaw: number }
+export type Experiment = { id: number | null; name: string }
 export type LedAction = "Off" | "On" | "Toggle" | "SetBrightness"
 export type SensorFrame = { values: number[]; wavelength: number }
 export type SerialRequest = "Ping" | "SystemStatus" | "EnvironmentInfo" | "PhotosensorResults" | { SetLedState: { wavelength: number; action: LedAction; brightness: number } }

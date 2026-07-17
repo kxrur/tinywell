@@ -2,7 +2,7 @@ use std::fs;
 use std::sync::Mutex;
 use thiserror::Error;
 
-use diesel::{Connection, SqliteConnection};
+use diesel::{Connection, RunQueryDsl, SqliteConnection};
 use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
 use tauri::Manager;
 
@@ -51,6 +51,11 @@ pub fn init_database(app_handle: &tauri::AppHandle) -> Result<(), DatabaseError>
     state.db_path = db_path_str.to_string();
 
     let mut connection = establish_connection(db_path_str)?;
+
+    // enforce foreign keys to check for parent existence
+    diesel::sql_query("PRAGMA foreign_keys = ON")
+        .execute(&mut connection)
+        .map_err(DatabaseError::Operation)?;
 
     connection
         .run_pending_migrations(MIGRATIONS)
