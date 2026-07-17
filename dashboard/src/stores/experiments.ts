@@ -55,6 +55,27 @@ export const useExperimentStore = defineStore('experiments', () => {
     await select(result.data.id)
   }
 
+  async function deleteExperiment(experiment: Experiment) {
+    if (experiment.id === null) {
+      throw new Error('Experiment has no ID')
+    }
+
+    const isActive = experiment.id === activeExperimentId.value
+    if (isActive && serialStore.isConnected) {
+      await serialStore.disconnect()
+    }
+
+    const result = await commands.experimentDelete(experiment.id)
+    if (result.status === 'error') {
+      throw new Error(result.error)
+    }
+
+    if (isActive) {
+      activeExperimentId.value = null
+    }
+    await refresh()
+  }
+
   async function initialize() {
     if (isLoading.value) {
       return
@@ -76,6 +97,7 @@ export const useExperimentStore = defineStore('experiments', () => {
   return {
     activeExperiment,
     createExperiment,
+    deleteExperiment,
     error,
     experiments,
     initialize,

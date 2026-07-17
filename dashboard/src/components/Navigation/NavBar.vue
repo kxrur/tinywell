@@ -23,28 +23,41 @@
             v-for="experiment in experimentStore.experiments"
             :key="experiment.id ?? experiment.name"
           >
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger as-child>
-                  <SidebarMenuButton
-                    class="w-full justify-start py-2 hover:bg-accent hover:text-accent-foreground"
-                    :is-active="
-                      experiment.id === experimentStore.activeExperiment?.id
-                    "
-                    @click="
-                      experimentStore.select(experiment.id).catch(showError)
-                    "
-                  >
-                    <span class="truncate font-medium">{{
+            <ContextMenu>
+              <ContextMenuTrigger>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger as-child>
+                      <SidebarMenuButton
+                        class="w-full justify-start py-2 hover:bg-accent hover:text-accent-foreground"
+                        :is-active="
+                          experiment.id === experimentStore.activeExperiment?.id
+                        "
+                        @click="
+                          experimentStore.select(experiment.id).catch(showError)
+                        "
+                      >
+                        <span class="truncate font-medium">{{
+                          experiment.name
+                        }}</span>
+                      </SidebarMenuButton>
+                    </TooltipTrigger>
+                    <TooltipContent side="right">{{
                       experiment.name
-                    }}</span>
-                  </SidebarMenuButton>
-                </TooltipTrigger>
-                <TooltipContent side="right">{{
-                  experiment.name
-                }}</TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+                    }}</TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </ContextMenuTrigger>
+              <ContextMenuContent>
+                <ContextMenuItem
+                  variant="destructive"
+                  @select="openDeleteDialog(experiment)"
+                >
+                  <Trash2 />
+                  Delete experiment
+                </ContextMenuItem>
+              </ContextMenuContent>
+            </ContextMenu>
           </div>
           <p
             v-if="experimentStore.isLoading"
@@ -112,12 +125,46 @@
         </form>
       </DialogContent>
     </Dialog>
+
+    <Dialog v-model:open="isDeleteDialogOpen">
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Delete experiment?</DialogTitle>
+          <DialogDescription>
+            This permanently deletes {{ experimentToDelete?.name }} and all of
+            its recorded telemetry. This action cannot be undone.
+          </DialogDescription>
+        </DialogHeader>
+        <p v-if="deleteError" class="text-sm text-destructive">
+          {{ deleteError }}
+        </p>
+        <DialogFooter>
+          <Button
+            type="button"
+            variant="outline"
+            :disabled="isDeleting"
+            @click="isDeleteDialogOpen = false"
+          >
+            Cancel
+          </Button>
+          <Button
+            type="button"
+            variant="destructive"
+            :disabled="isDeleting"
+            @click="deleteExperiment"
+          >
+            {{ isDeleting ? 'Deleting…' : 'Delete experiment' }}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   </div>
 </template>
 
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
-import { Plus, Beaker } from 'lucide-vue-next'
+import { Plus, Beaker, Trash2 } from 'lucide-vue-next'
+import type { Experiment } from '@/bindings'
 import { useExperimentStore } from '@/stores/experiments'
 
 const experimentStore = useExperimentStore()
@@ -126,6 +173,10 @@ const isCreateDialogOpen = ref(false)
 const isCreating = ref(false)
 const newExperimentName = ref('')
 const dialogError = ref('')
+const isDeleteDialogOpen = ref(false)
+const isDeleting = ref(false)
+const experimentToDelete = ref<Experiment | null>(null)
+const deleteError = ref('')
 
 function showError(error: unknown) {
   errorMessage.value =
@@ -155,6 +206,31 @@ async function createExperiment() {
       error instanceof Error ? error.message : 'Failed to create experiment'
   } finally {
     isCreating.value = false
+  }
+}
+
+function openDeleteDialog(experiment: Experiment) {
+  experimentToDelete.value = experiment
+  deleteError.value = ''
+  isDeleteDialogOpen.value = true
+}
+
+async function deleteExperiment() {
+  if (!experimentToDelete.value) {
+    return
+  }
+
+  isDeleting.value = true
+  deleteError.value = ''
+  try {
+    await experimentStore.deleteExperiment(experimentToDelete.value)
+    isDeleteDialogOpen.value = false
+    experimentToDelete.value = null
+  } catch (error) {
+    deleteError.value =
+      error instanceof Error ? error.message : 'Failed to delete experiment'
+  } finally {
+    isDeleting.value = false
   }
 }
 

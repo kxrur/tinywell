@@ -1,4 +1,4 @@
-use diesel::{ExpressionMethods, QueryDsl, QueryResult, RunQueryDsl, SqliteConnection};
+use diesel::{Connection, ExpressionMethods, QueryDsl, QueryResult, RunQueryDsl, SqliteConnection};
 
 use crate::database::models::Experiment;
 use crate::database::new_models::NewExperiment;
@@ -33,4 +33,25 @@ pub fn experiment_name_exists(conn: &mut SqliteConnection, target_name: &str) ->
         experiments.filter(name.eq(target_name)),
     ))
     .get_result(conn)
+}
+
+pub fn delete_experiment(conn: &mut SqliteConnection, target_id: i32) -> QueryResult<()> {
+    conn.transaction(|conn| {
+        diesel::delete(
+            crate::database::schema::well_readings::table
+                .filter(crate::database::schema::well_readings::experiment_id.eq(target_id)),
+        )
+        .execute(conn)?;
+        diesel::delete(
+            crate::database::schema::data::table
+                .filter(crate::database::schema::data::experiment_id.eq(target_id)),
+        )
+        .execute(conn)?;
+        diesel::delete(
+            crate::database::schema::experiments::table
+                .filter(crate::database::schema::experiments::id.eq(target_id)),
+        )
+        .execute(conn)?;
+        Ok(())
+    })
 }

@@ -21,7 +21,9 @@ use crate::app::serial_app::{
     greet, serial_connect, serial_disconnect, serial_list_ports, serial_send, serial_set_port,
     serial_status, subscribe_environment_frames, subscribe_sensor_frames,
 };
-use crate::app::experiment_app::{experiment_create, experiment_list, experiment_set_active};
+use crate::app::experiment_app::{
+    experiment_create, experiment_delete, experiment_list, experiment_set_active,
+};
 use crate::database::sqlite::init_database;
 use crate::state::AppState;
 
@@ -34,6 +36,7 @@ pub fn run() {
     let builder = Builder::<tauri::Wry>::new().commands(collect_commands![
         greet,
         experiment_create,
+        experiment_delete,
         experiment_list,
         experiment_set_active,
         serial_set_port,

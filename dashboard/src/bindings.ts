@@ -16,6 +16,14 @@ async experimentCreate(name: string) : Promise<Result<Experiment, string>> {
     else return { status: "error", error: e  as any };
 }
 },
+async experimentDelete(experimentId: number) : Promise<Result<null, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("experiment_delete", { experimentId }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
 async experimentList() : Promise<Result<Experiment[], string>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("experiment_list") };
