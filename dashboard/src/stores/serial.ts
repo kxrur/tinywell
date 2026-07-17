@@ -15,7 +15,7 @@ function unwrapResult<T>(
   return result.data
 }
 
-function isConnected(status: ConnectionStatus): boolean {
+function statusIsConnected(status: ConnectionStatus): boolean {
   return typeof status === 'object' && status !== null && 'Connected' in status
 }
 
@@ -35,6 +35,7 @@ export const useSerialStore = defineStore('serial', () => {
       ? status.value.Connected.port
       : null,
   )
+  const isConnected = computed(() => connectedPort.value !== null)
 
   async function refreshStatus(): Promise<ConnectionStatus> {
     status.value = unwrapResult(
@@ -56,7 +57,7 @@ export const useSerialStore = defineStore('serial', () => {
   async function waitForConnection(): Promise<void> {
     for (let attempt = 0; attempt < 10; attempt += 1) {
       const currentStatus = await refreshStatus()
-      if (isConnected(currentStatus)) {
+      if (statusIsConnected(currentStatus)) {
         return
       }
 
@@ -74,7 +75,7 @@ export const useSerialStore = defineStore('serial', () => {
     connectPromise.value = (async () => {
       const currentStatus = await refreshStatus()
 
-      if (isConnected(currentStatus)) {
+      if (statusIsConnected(currentStatus)) {
         return
       }
 
@@ -117,6 +118,7 @@ export const useSerialStore = defineStore('serial', () => {
     status,
     configuredPort,
     connectedPort,
+    isConnected,
     disconnect,
     ensureConnected,
     refreshStatus,

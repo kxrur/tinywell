@@ -32,11 +32,15 @@
 
     <Button
       class="w-full"
-      :disabled="isLoadingPorts || availablePorts.length === 0 || isConnecting"
-      @click="connectToSelectedPort"
+      :disabled="
+        isLoadingPorts ||
+        isConnecting ||
+        (!serialStore.isConnected && availablePorts.length === 0)
+      "
+      @click="serialStore.isConnected ? serialStore.disconnect() : connectToSelectedPort()"
       variant="outline"
     >
-      {{ isConnecting ? 'Connecting...' : 'Connect' }}
+      {{ isConnecting ? 'Connecting...' : serialStore.isConnected ? 'Disconnect' : 'Connect' }}
     </Button>
 
     <p v-if="loadError" class="text-xs text-destructive">

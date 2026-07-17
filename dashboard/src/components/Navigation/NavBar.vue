@@ -23,15 +23,28 @@
             v-for="experiment in experimentStore.experiments"
             :key="experiment.id ?? experiment.name"
           >
-            <SidebarMenuButton
-              class="w-full justify-start py-2 hover:bg-accent hover:text-accent-foreground"
-              :is-active="
-                experiment.id === experimentStore.activeExperiment?.id
-              "
-              @click="experimentStore.select(experiment.id).catch(showError)"
-            >
-              <span class="truncate font-medium">{{ experiment.name }}</span>
-            </SidebarMenuButton>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger as-child>
+                  <SidebarMenuButton
+                    class="w-full justify-start py-2 hover:bg-accent hover:text-accent-foreground"
+                    :is-active="
+                      experiment.id === experimentStore.activeExperiment?.id
+                    "
+                    @click="
+                      experimentStore.select(experiment.id).catch(showError)
+                    "
+                  >
+                    <span class="truncate font-medium">{{
+                      experiment.name
+                    }}</span>
+                  </SidebarMenuButton>
+                </TooltipTrigger>
+                <TooltipContent side="right">{{
+                  experiment.name
+                }}</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </div>
           <p
             v-if="experimentStore.isLoading"

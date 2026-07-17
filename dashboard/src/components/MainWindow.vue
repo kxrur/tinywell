@@ -3,14 +3,19 @@
     <div class="flex w-full flex-col gap-6">
       <div class="relative flex min-h-9 items-center">
         <MainWindowTabs v-model="activeTab" class="mx-auto" />
-        <Badge
-          class="absolute right-0 max-w-64"
-          :variant="experimentStore.activeExperiment ? 'default' : 'secondary'"
-        >
-          <span class="truncate">
-            {{ experimentStore.activeExperiment?.name ?? 'Not recording' }}
-          </span>
-        </Badge>
+        <TooltipProvider v-if="isRecording" class="absolute right-0">
+          <Tooltip>
+            <TooltipTrigger as-child>
+              <Badge variant="outline" class="gap-1.5 border-green-500/40 bg-green-500/10 text-green-700 dark:text-green-400">
+                <Save class="size-3.5" />
+                <span class="text-xs font-semibold tracking-wide">SAVING</span>
+              </Badge>
+            </TooltipTrigger>
+            <TooltipContent>
+              Recording to {{ experimentStore.activeExperiment?.name }}
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       </div>
 
       <div v-if="activeTab === 'control'" class="min-h-0 flex-1">
@@ -32,13 +37,19 @@
   </div>
 </template>
 <script setup lang="ts">
-import { watch } from 'vue'
+import { computed, watch } from 'vue'
+import { Save } from 'lucide-vue-next'
 import { useExperimentStore } from '@/stores/experiments'
 import { useHistoryStore } from '@/stores/history'
+import { useSerialStore } from '@/stores/serial'
 
 const activeTab = ref<'control' | 'info' | 'history'>('control')
 const experimentStore = useExperimentStore()
 const historyStore = useHistoryStore()
+const serialStore = useSerialStore()
+const isRecording = computed(
+  () => serialStore.isConnected && experimentStore.activeExperiment !== null,
+)
 
 watch(activeTab, tab => {
   if (tab === 'info' || tab === 'history') {

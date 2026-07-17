@@ -1,12 +1,14 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import { commands, type Experiment } from '@/bindings'
+import { useSerialStore } from '@/stores/serial'
 
 function defaultExperimentName() {
-  return `Experiment ${new Date().toLocaleString()}`
+  return `Exp. ${new Date().toLocaleString()}`
 }
 
 export const useExperimentStore = defineStore('experiments', () => {
+  const serialStore = useSerialStore()
   const experiments = ref<Experiment[]>([])
   const activeExperimentId = ref<number | null>(null)
   const isLoading = ref(false)
@@ -30,6 +32,13 @@ export const useExperimentStore = defineStore('experiments', () => {
     if (experimentId === null) {
       throw new Error('Experiment has no ID')
     }
+    if (
+      experimentId !== activeExperimentId.value &&
+      serialStore.isConnected
+    ) {
+      await serialStore.disconnect()
+    }
+
     const result = await commands.experimentSetActive(experimentId)
     if (result.status === 'error') {
       throw new Error(result.error)
