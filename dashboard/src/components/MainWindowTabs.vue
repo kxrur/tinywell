@@ -1,22 +1,22 @@
 <template>
-  <div class="flex justify-center rounded-xl border bg-card p-2 shadow-sm">
-    <div class="grid w-full max-w-xl grid-cols-4 gap-2">
-      <button
+  <Tabs
+    :model-value="modelValue"
+    class="flex w-full items-center"
+    @update:model-value="updateTab"
+  >
+    <TabsList
+      class="grid h-auto w-full max-w-xl grid-cols-4 gap-2 rounded-xl border bg-card p-2 shadow-sm"
+    >
+      <TabsTrigger
         v-for="tab in tabs"
         :key="tab.value"
-        type="button"
-        class="rounded-lg px-4 py-2 text-sm font-medium transition-colors"
-        :class="
-          modelValue === tab.value
-            ? 'bg-primary text-primary-foreground shadow-sm'
-            : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
-        "
-        @click="emit('update:modelValue', tab.value)"
+        :value="tab.value"
+        class="h-auto rounded-lg px-4 py-2 text-muted-foreground hover:bg-accent hover:text-accent-foreground data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm"
       >
         {{ tab.label }}
-      </button>
-    </div>
-  </div>
+      </TabsTrigger>
+    </TabsList>
+  </Tabs>
 </template>
 
 <script setup lang="ts">
@@ -29,6 +29,12 @@ defineProps<{
 const emit = defineEmits<{
   (event: 'update:modelValue', value: TabValue): void
 }>()
+
+const updateTab = (value: string | number) => {
+  if (typeof value === 'string') {
+    emit('update:modelValue', value as TabValue)
+  }
+}
 
 const tabs: { label: string; value: TabValue }[] = [
   { label: 'Control', value: 'control' },

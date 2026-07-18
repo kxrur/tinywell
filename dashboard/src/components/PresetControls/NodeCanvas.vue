@@ -19,11 +19,11 @@
         leave-from-class="opacity-100 transform translate-y-0"
         leave-to-class="opacity-0 transform -translate-y-4"
       >
-        <div
+        <Card
           v-if="uniformConfigurationEnabled"
-          class="flex flex-col items-center space-y-4 p-4 border rounded-lg bg-muted/20 max-w-sm"
+          class="w-full max-w-sm items-center gap-4 bg-muted/20 py-4"
         >
-          <div class="flex flex-col space-y-4 w-full">
+          <CardContent class="w-full space-y-4">
             <BrightnessSlider
               :modelValue="uniformCell.value"
               @update:modelValue="updateUniformBrightness"
@@ -34,12 +34,12 @@
               @update:modelValue="updateUniformWavelength"
               sliderClass="w-full"
             />
-          </div>
+          </CardContent>
 
-          <div class="text-sm text-muted-foreground text-center">
+          <CardFooter class="justify-center px-4 text-center text-sm text-muted-foreground">
             Changes apply immediately to all active cells
-          </div>
-        </div>
+          </CardFooter>
+        </Card>
       </Transition>
     </div>
 

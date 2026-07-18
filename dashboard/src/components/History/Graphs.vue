@@ -1,13 +1,14 @@
 <template>
-  <div class="flex h-full min-h-0 flex-col gap-6 overflow-y-auto p-4">
+  <ScrollArea class="h-full min-h-0">
+    <div class="flex min-h-0 flex-col gap-6 p-4">
 
-    <div v-if="streamError"
-      class="rounded-xl border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">
-      {{ streamError }}
-    </div>
+    <Alert v-if="streamError" variant="destructive">
+      <AlertTitle>Telemetry stream error</AlertTitle>
+      <AlertDescription>{{ streamError }}</AlertDescription>
+    </Alert>
 
-    <section class="space-y-3 rounded-2xl border bg-card p-4 shadow-sm">
-      <div class="flex items-center justify-between gap-3">
+    <Card class="gap-3 py-4">
+      <CardHeader class="flex flex-row items-center justify-between gap-3 px-4">
         <div>
           <h3 class="text-lg font-semibold">Environment</h3>
           <p class="text-sm text-muted-foreground">
@@ -18,9 +19,9 @@
         <p class="text-sm text-muted-foreground">
           {{ environmentPointCount }} points
         </p>
-      </div>
+      </CardHeader>
 
-      <div class="grid gap-4 xl:grid-cols-2">
+      <CardContent class="grid gap-4 px-4 xl:grid-cols-2">
         <div class="rounded-2xl border bg-background/60 p-3">
           <VChart class="chart" :option="temperatureOption" autoresize />
         </div>
@@ -30,11 +31,11 @@
         <div class="rounded-2xl border bg-background/60 p-3 xl:col-span-2">
           <VChart class="chart" :option="humidityOption" autoresize />
         </div>
-      </div>
-    </section>
+      </CardContent>
+    </Card>
 
-    <section class="space-y-3 rounded-2xl border bg-card p-4 shadow-sm">
-      <div class="flex items-center justify-between gap-3">
+    <Card class="gap-3 py-4">
+      <CardHeader class="flex flex-row items-center justify-between gap-3 px-4">
         <div>
           <h3 class="text-lg font-semibold">Photosensors</h3>
           <p class="text-sm text-muted-foreground">
@@ -45,11 +46,14 @@
         <p class="text-sm text-muted-foreground">
           {{ sensorPointCount }} points
         </p>
-      </div>
+      </CardHeader>
 
-      <VChart class="chart" :option="sensorOption" autoresize />
-    </section>
-  </div>
+      <CardContent class="px-4">
+        <VChart class="chart" :option="sensorOption" autoresize />
+      </CardContent>
+    </Card>
+    </div>
+  </ScrollArea>
 </template>
 
 <script setup lang="ts">
