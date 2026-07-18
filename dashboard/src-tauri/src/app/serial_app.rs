@@ -5,8 +5,8 @@ use crate::serial::{ConnectionStatus, SerialManager, SerialRequest, SerialRespon
 use crate::state::AppState;
 use crate::telemetry::{EnvironmentFrame, SensorFrame};
 use log::{debug, info};
-use tauri::AppHandle;
 use tauri::ipc::Channel;
+use tauri::AppHandle;
 
 #[tauri::command]
 #[specta::specta]
@@ -88,7 +88,9 @@ pub fn subscribe_sensor_frames(
 ) -> Result<(), String> {
     let serial = serial_manager(&state)?;
     let telemetry = {
-        let app = state.lock().map_err(|_| "State lock poisoned".to_string())?;
+        let app = state
+            .lock()
+            .map_err(|_| "State lock poisoned".to_string())?;
         app.telemetry.clone()
     };
     telemetry.subscribe_sensor(channel, serial, app_handle);
@@ -105,7 +107,9 @@ pub fn subscribe_environment_frames(
 ) -> Result<(), String> {
     let serial = serial_manager(&state)?;
     let telemetry = {
-        let app = state.lock().map_err(|_| "State lock poisoned".to_string())?;
+        let app = state
+            .lock()
+            .map_err(|_| "State lock poisoned".to_string())?;
         app.telemetry.clone()
     };
     telemetry.subscribe_environment(channel, serial, app_handle);

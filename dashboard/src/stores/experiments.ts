@@ -4,7 +4,7 @@ import { commands, type Experiment } from '@/bindings'
 import { useSerialStore } from '@/stores/serial'
 
 function defaultExperimentName() {
-  return `Exp. ${new Date().toLocaleString()}`
+  return `Exp. ${new Date().toLocaleString('sv-SE', { hour12: false })}`
 }
 
 export const useExperimentStore = defineStore('experiments', () => {

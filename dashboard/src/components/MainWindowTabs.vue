@@ -1,6 +1,6 @@
 <template>
   <div class="flex justify-center rounded-xl border bg-card p-2 shadow-sm">
-    <div class="grid w-full max-w-md grid-cols-3 gap-2">
+    <div class="grid w-full max-w-xl grid-cols-4 gap-2">
       <button
         v-for="tab in tabs"
         :key="tab.value"
@@ -20,7 +20,7 @@
 </template>
 
 <script setup lang="ts">
-type TabValue = 'control' | 'info' | 'history'
+type TabValue = 'control' | 'info' | 'history' | 'export'
 
 defineProps<{
   modelValue: TabValue
@@ -34,5 +34,6 @@ const tabs: { label: string; value: TabValue }[] = [
   { label: 'Control', value: 'control' },
   { label: 'Info', value: 'info' },
   { label: 'History', value: 'history' },
+  { label: 'Export', value: 'export' },
 ]
 </script>

@@ -44,6 +44,7 @@ declare module 'vue' {
     DialogScrollContent: typeof import('./components/ui/dialog/DialogScrollContent.vue')['default']
     DialogTitle: typeof import('./components/ui/dialog/DialogTitle.vue')['default']
     DialogTrigger: typeof import('./components/ui/dialog/DialogTrigger.vue')['default']
+    ExperimentExport: typeof import('./components/Export/ExperimentExport.vue')['default']
     Graphs: typeof import('./components/History/Graphs.vue')['default']
     HeaterControl: typeof import('./components/HeaterControls/HeaterControl.vue')['default']
     Input: typeof import('./components/ui/input/Input.vue')['default']

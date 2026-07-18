@@ -9,6 +9,7 @@ use tauri_specta::*;
 
 mod app;
 mod database;
+mod export;
 mod model;
 mod serial;
 mod state;
@@ -17,12 +18,13 @@ mod telemetry;
 #[cfg(test)]
 mod test;
 
+use crate::app::experiment_app::{
+    experiment_create, experiment_delete, experiment_list, experiment_set_active,
+};
+use crate::app::export_app::{export_csv_experiments, export_excel_experiments};
 use crate::app::serial_app::{
     greet, serial_connect, serial_disconnect, serial_list_ports, serial_send, serial_set_port,
     serial_status, subscribe_environment_frames, subscribe_sensor_frames,
-};
-use crate::app::experiment_app::{
-    experiment_create, experiment_delete, experiment_list, experiment_set_active,
 };
 use crate::database::sqlite::init_database;
 use crate::state::AppState;
@@ -39,6 +41,8 @@ pub fn run() {
         experiment_delete,
         experiment_list,
         experiment_set_active,
+        export_csv_experiments,
+        export_excel_experiments,
         serial_set_port,
         serial_connect,
         serial_disconnect,
@@ -55,6 +59,7 @@ pub fn run() {
         .expect("Failed to export typescript bindings");
 
     tauri::Builder::default()
+        .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_opener::init())
         .invoke_handler(builder.invoke_handler())

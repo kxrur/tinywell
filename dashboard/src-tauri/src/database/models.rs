@@ -3,7 +3,6 @@
 #![allow(unused)]
 #![allow(clippy::all)]
 
-
 use diesel::prelude::*;
 use serde::Serialize;
 use specta::Type;

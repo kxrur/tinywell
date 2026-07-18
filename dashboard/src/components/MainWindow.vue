@@ -33,17 +33,22 @@
       <div v-if="activeTab === 'history'" class="min-h-0 flex-1">
         <Graphs></Graphs>
       </div>
+
+      <div v-if="activeTab === 'export'" class="min-h-0 flex-1">
+        <ExperimentExport />
+      </div>
     </div>
   </div>
 </template>
 <script setup lang="ts">
 import { computed, watch } from 'vue'
 import { Save } from 'lucide-vue-next'
+import ExperimentExport from '@/components/Export/ExperimentExport.vue'
 import { useExperimentStore } from '@/stores/experiments'
 import { useHistoryStore } from '@/stores/history'
 import { useSerialStore } from '@/stores/serial'
 
-const activeTab = ref<'control' | 'info' | 'history'>('control')
+const activeTab = ref<'control' | 'info' | 'history' | 'export'>('control')
 const experimentStore = useExperimentStore()
 const historyStore = useHistoryStore()
 const serialStore = useSerialStore()

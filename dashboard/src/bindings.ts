@@ -40,6 +40,22 @@ async experimentSetActive(experimentId: number) : Promise<Result<null, string>> 
     else return { status: "error", error: e  as any };
 }
 },
+async exportCsvExperiments(outputDirectory: string, experimentIds: number[] | null) : Promise<Result<ExportSummary, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("export_csv_experiments", { outputDirectory, experimentIds }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async exportExcelExperiments(outputDirectory: string, experimentIds: number[] | null) : Promise<Result<ExportSummary, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("export_excel_experiments", { outputDirectory, experimentIds }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
 async serialSetPort(port: string) : Promise<Result<null, string>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("serial_set_port", { port }) };
@@ -119,6 +135,7 @@ async subscribeEnvironmentFrames(channel: TAURI_CHANNEL<EnvironmentFrame>) : Pro
 export type ConnectionStatus = "Disconnected" | "Connecting" | { Connected: { port: string } }
 export type EnvironmentFrame = { wellTempC: number; ambientTempRaw: number; ambientPressureRaw: number; ambientHumidityRaw: number }
 export type Experiment = { id: number | null; name: string }
+export type ExportSummary = { experimentsExported: number; filesWritten: number }
 export type LedAction = "Off" | "On" | "Toggle" | "SetBrightness"
 export type SensorFrame = { values: number[]; wavelength: number }
 export type SerialRequest = "Ping" | "SystemStatus" | "EnvironmentInfo" | "PhotosensorResults" | { SetLedState: { wavelength: number; action: LedAction; brightness: number } }

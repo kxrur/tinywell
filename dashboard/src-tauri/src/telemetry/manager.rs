@@ -61,10 +61,7 @@ impl TelemetryManager {
         app_handle: AppHandle,
     ) {
         let should_start_worker = {
-            let mut subscribers = self
-                .environment
-                .lock()
-                .expect("environment telemetry lock");
+            let mut subscribers = self.environment.lock().expect("environment telemetry lock");
             subscribers.channels.push(channel);
             if subscribers.worker_started {
                 false
@@ -88,17 +85,18 @@ impl TelemetryManager {
     }
 
     fn broadcast_environment(&self, frame: &EnvironmentFrame) {
-        let mut subscribers = self
-            .environment
-            .lock()
-            .expect("environment telemetry lock");
+        let mut subscribers = self.environment.lock().expect("environment telemetry lock");
         subscribers
             .channels
             .retain(|channel| channel.send(frame.clone()).is_ok());
     }
 }
 
-fn sensor_worker(serial: Arc<SerialManager>, app_handle: AppHandle, telemetry: Arc<TelemetryManager>) {
+fn sensor_worker(
+    serial: Arc<SerialManager>,
+    app_handle: AppHandle,
+    telemetry: Arc<TelemetryManager>,
+) {
     info!("Shared photosensor telemetry worker started");
 
     loop {
@@ -129,10 +127,7 @@ fn environment_worker(
     info!("Shared environment telemetry worker started");
 
     loop {
-        match serial.send_request(
-            SerialRequest::EnvironmentInfo,
-            Duration::from_millis(1500),
-        ) {
+        match serial.send_request(SerialRequest::EnvironmentInfo, Duration::from_millis(1500)) {
             Ok(SerialResponse::EnvironmentInfo {
                 well_temp,
                 ambient_temp,
@@ -158,9 +153,14 @@ fn environment_worker(
     }
 }
 
-fn persist_environment_frame(app_handle: &AppHandle, frame: &EnvironmentFrame) -> Result<(), String> {
+fn persist_environment_frame(
+    app_handle: &AppHandle,
+    frame: &EnvironmentFrame,
+) -> Result<(), String> {
     let state = app_handle.state::<Mutex<AppState>>();
-    let mut app = state.lock().map_err(|_| "State lock poisoned".to_string())?;
+    let mut app = state
+        .lock()
+        .map_err(|_| "State lock poisoned".to_string())?;
     let Some(experiment_id) = app.active_experiment_id else {
         return Ok(());
     };
@@ -182,7 +182,10 @@ fn persist_environment_frame(app_handle: &AppHandle, frame: &EnvironmentFrame) -
 
 fn persist_sensor_frame(app_handle: &AppHandle, frame: &SensorFrame) -> Result<(), String> {
     if frame.values.len() != 14 {
-        return Err(format!("Expected 14 photosensor values, received {}", frame.values.len()));
+        return Err(format!(
+            "Expected 14 photosensor values, received {}",
+            frame.values.len()
+        ));
     }
     let wavelength_nm = match frame.wavelength {
         0 => 470.0,
@@ -193,7 +196,9 @@ fn persist_sensor_frame(app_handle: &AppHandle, frame: &SensorFrame) -> Result<(
     };
 
     let state = app_handle.state::<Mutex<AppState>>();
-    let mut app = state.lock().map_err(|_| "State lock poisoned".to_string())?;
+    let mut app = state
+        .lock()
+        .map_err(|_| "State lock poisoned".to_string())?;
     let Some(experiment_id) = app.active_experiment_id else {
         return Ok(());
     };
