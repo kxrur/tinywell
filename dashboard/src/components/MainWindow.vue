@@ -27,7 +27,7 @@
 
       <div
         v-if="activeTab === 'info'"
-        class="flex min-h-0 flex-1 flex-col items-center gap-6"
+        class="flex min-h-0 flex-1 flex-col items-center gap-6 xl:flex-row xl:items-start xl:justify-center"
       >
         <div v-if="!serialStore.isConnected" class="flex h-full w-full items-center justify-center rounded-2xl border border-dashed p-8 text-center text-sm text-muted-foreground">
           Connect a serial device from the sidebar to view live sensor data.

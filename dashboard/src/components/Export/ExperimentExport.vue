@@ -1,16 +1,5 @@
 <template>
   <section class="mx-auto flex w-full max-w-2xl flex-col gap-6 rounded-2xl border bg-card p-6 shadow-sm">
-    <div class="space-y-2">
-      <p class="text-xs uppercase tracking-[0.24em] text-muted-foreground">
-        Export
-      </p>
-      <h2 class="text-2xl font-semibold tracking-tight">Export experiments</h2>
-      <p class="text-sm text-muted-foreground">
-        Choose a folder to export Excel workbooks or CSV files with local
-        timestamps.
-      </p>
-    </div>
-
     <div class="grid gap-2">
       <Label for="export-format">Export format</Label>
       <Select v-model="format">
@@ -32,20 +21,18 @@
         <FolderOutput />
         Export all experiments
       </Button>
-      <Button
-        variant="outline"
-        :disabled="isExporting || !experimentStore.activeExperiment"
-        @click="exportActive"
-      >
+      <Button variant="outline" :disabled="isExporting || !experimentStore.activeExperiment" @click="exportActive">
         <Download />
         Export active experiment
       </Button>
     </div>
 
-    <p v-if="resultMessage" class="rounded-lg border border-green-500/30 bg-green-500/10 px-3 py-2 text-sm text-green-700 dark:text-green-400">
+    <p v-if="resultMessage"
+      class="rounded-lg border border-green-500/30 bg-green-500/10 px-3 py-2 text-sm text-green-700 dark:text-green-400">
       {{ resultMessage }}
     </p>
-    <p v-if="errorMessage" class="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+    <p v-if="errorMessage"
+      class="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
       {{ errorMessage }}
     </p>
   </section>

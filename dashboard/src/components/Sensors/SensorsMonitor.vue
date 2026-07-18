@@ -1,6 +1,6 @@
 <template>
   <div
-    class="inline-flex max-w-full self-center flex-col gap-4 rounded-lg border bg-background p-4"
+    class="inline-flex max-w-full self-center flex-col gap-4 rounded-lg border bg-background p-4 xl:self-start"
   >
     <div class="flex items-center justify-between">
       <div>

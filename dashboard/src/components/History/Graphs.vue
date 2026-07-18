@@ -1,34 +1,8 @@
 <template>
   <div class="flex h-full min-h-0 flex-col gap-6 overflow-y-auto p-4">
-    <div
-      class="flex flex-wrap items-end justify-between gap-4 rounded-2xl border bg-card px-5 py-4 shadow-sm"
-    >
-      <div>
-        <p class="text-xs uppercase tracking-[0.24em] text-muted-foreground">
-          History
-        </p>
-        <h2 class="text-2xl font-semibold tracking-tight">
-          Live telemetry history
-        </h2>
-        <p class="text-sm text-muted-foreground">
-          Environment values share one chart; photosensor channels share
-          another.
-        </p>
-      </div>
 
-      <button
-        type="button"
-        class="rounded-lg border px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
-        @click="historyStore.clearHistory"
-      >
-        Clear history
-      </button>
-    </div>
-
-    <div
-      v-if="streamError"
-      class="rounded-xl border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive"
-    >
+    <div v-if="streamError"
+      class="rounded-xl border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">
       {{ streamError }}
     </div>
 
