@@ -56,6 +56,14 @@ async exportExcelExperiments(outputDirectory: string, experimentIds: number[] | 
     else return { status: "error", error: e  as any };
 }
 },
+async historyLoadExperiment(experimentId: number, maxRows: number) : Promise<Result<HistorySnapshot, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("history_load_experiment", { experimentId, maxRows }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
 async serialSetPort(port: string) : Promise<Result<null, string>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("serial_set_port", { port }) };
@@ -134,13 +142,16 @@ async subscribeEnvironmentFrames(channel: TAURI_CHANNEL<EnvironmentFrame>) : Pro
 
 export type ConnectionStatus = "Disconnected" | "Connecting" | { Connected: { port: string } }
 export type EnvironmentFrame = { wellTempC: number; ambientTempRaw: number; ambientPressureRaw: number; ambientHumidityRaw: number }
+export type EnvironmentHistoryRow = { capturedAtMs: number; wellTemperatureC: number; ambientTemperatureC: number; ambientPressurePa: number; ambientHumidityPct: number }
 export type Experiment = { id: number | null; name: string }
 export type ExportSummary = { experimentsExported: number; filesWritten: number }
+export type HistorySnapshot = { environment: EnvironmentHistoryRow[]; readings: WellReadingHistoryRow[] }
 export type LedAction = "Off" | "On" | "Toggle" | "SetBrightness"
 export type SensorFrame = { values: number[]; wavelength: number }
 export type SerialRequest = "Ping" | "SystemStatus" | "EnvironmentInfo" | "PhotosensorResults" | { SetLedState: { wavelength: number; action: LedAction; brightness: number } }
 export type SerialResponse = "Ping" | { SystemStatus: { fw: number; state: number; uptime: number } } | { EnvironmentInfo: { well_temp: number; ambient_temp: number; ambient_pressure: number; ambient_humidity: number } } | { PhotosensorResults: { wavelength: number; values: number[] } } | { TelecommandAck: { tc_id: number; tc_result: number } } | { Error: { code: number } } | { Unknown: { frame_id: number; payload: number[] } }
 export type TAURI_CHANNEL<TSend> = null
+export type WellReadingHistoryRow = { capturedAtMs: number; wavelengthNm: number; well1Intensity: number; well2Intensity: number; well3Intensity: number; well4Intensity: number; well5Intensity: number; well6Intensity: number; well7Intensity: number; well8Intensity: number; well9Intensity: number; well10Intensity: number; well11Intensity: number; well12Intensity: number; well13Intensity: number; well14Intensity: number }
 
 /** tauri-specta globals **/
 

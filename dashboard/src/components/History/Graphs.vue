@@ -79,7 +79,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed, provide } from 'vue'
+import { computed, onMounted, provide, watch } from 'vue'
+import { toast } from 'vue-sonner'
 import { CanvasRenderer } from 'echarts/renderers'
 import { ScatterChart } from 'echarts/charts'
 import {
@@ -90,6 +91,7 @@ import {
 } from 'echarts/components'
 import { registerTheme, use } from 'echarts/core'
 import VChart, { THEME_KEY } from 'vue-echarts'
+import { useExperimentStore } from '@/stores/experiments'
 import { useHistoryStore } from '@/stores/history'
 import light from '@/theme/echarts/light.json'
 
@@ -115,7 +117,36 @@ type EChartsSeries = {
 }
 
 const historyStore = useHistoryStore()
+const experimentStore = useExperimentStore()
 const streamError = computed(() => historyStore.streamError)
+
+async function loadActiveExperimentHistory() {
+  const experimentId = experimentStore.activeExperiment?.id
+  if (experimentId === null || experimentId === undefined) {
+    historyStore.clearHistory()
+    return
+  }
+
+  try {
+    await historyStore.loadExperimentHistory(experimentId)
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : 'Failed to load experiment history'
+    toast.error('Failed to load experiment history', { description: message })
+  }
+}
+
+onMounted(() => {
+  void loadActiveExperimentHistory()
+})
+
+watch(
+  () => experimentStore.activeExperiment?.id,
+  () => {
+    historyStore.clearHistory()
+    void loadActiveExperimentHistory()
+  },
+)
 
 const formatTimestamp = (value: number) =>
   new Date(value).toLocaleTimeString([], {

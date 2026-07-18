@@ -1,7 +1,11 @@
 import { Channel } from '@tauri-apps/api/core'
 import { defineStore } from 'pinia'
 import { computed, reactive, ref, watch } from 'vue'
-import { commands, type EnvironmentFrame, type SensorFrame } from '@/bindings'
+import {
+  commands,
+  type EnvironmentFrame,
+  type SensorFrame,
+} from '@/bindings'
 import { useSerialStore } from '@/stores/serial'
 
 type HistoryPoint = [number, number]
@@ -36,6 +40,8 @@ export const useHistoryStore = defineStore('history', () => {
   const serialStore = useSerialStore()
   const isStreaming = ref(false)
   const startPromise = ref<Promise<void> | null>(null)
+  const loadPromise = ref<Promise<void> | null>(null)
+  const loadedExperimentId = ref<number | null>(null)
   const streamError = ref('')
   const latestSensorWavelength = ref<number | null>(null)
   const latestEnvironmentFrame = ref<EnvironmentFrame | null>(null)
@@ -129,6 +135,69 @@ export const useHistoryStore = defineStore('history', () => {
     }
   }
 
+  async function loadExperimentHistory(experimentId: number): Promise<void> {
+    if (loadedExperimentId.value === experimentId) {
+      return
+    }
+    if (loadPromise.value) {
+      return loadPromise.value
+    }
+
+    streamError.value = ''
+    loadPromise.value = (async () => {
+      const result = await commands.historyLoadExperiment(
+        experimentId,
+        MAX_HISTORY_POINTS,
+      )
+      if (result.status === 'error') {
+        throw new Error(result.error)
+      }
+
+      clearHistory()
+      result.data.environment.forEach(row => {
+        appendPoint(environmentHistory.wellTempC, [
+          row.capturedAtMs,
+          row.wellTemperatureC,
+        ])
+        appendPoint(environmentHistory.ambientTempC, [
+          row.capturedAtMs,
+          row.ambientTemperatureC,
+        ])
+        appendPoint(environmentHistory.ambientPressureHpa, [
+          row.capturedAtMs,
+          row.ambientPressurePa / 100,
+        ])
+        appendPoint(environmentHistory.ambientHumidityPct, [
+          row.capturedAtMs,
+          row.ambientHumidityPct,
+        ])
+      })
+      result.data.readings.forEach(row => {
+        const values = [
+          row.well1Intensity, row.well2Intensity, row.well3Intensity,
+          row.well4Intensity, row.well5Intensity, row.well6Intensity,
+          row.well7Intensity, row.well8Intensity, row.well9Intensity,
+          row.well10Intensity, row.well11Intensity, row.well12Intensity,
+          row.well13Intensity, row.well14Intensity,
+        ]
+        values.forEach((value, index) => {
+          appendPoint(sensorHistory[index], [row.capturedAtMs, value])
+        })
+      })
+      loadedExperimentId.value = experimentId
+    })()
+
+    try {
+      await loadPromise.value
+    } catch (error) {
+      streamError.value =
+        error instanceof Error ? error.message : 'Failed to load experiment history'
+      throw error
+    } finally {
+      loadPromise.value = null
+    }
+  }
+
   function clearHistory() {
     environmentHistory.wellTempC.splice(0)
     environmentHistory.ambientTempC.splice(0)
@@ -139,6 +208,7 @@ export const useHistoryStore = defineStore('history', () => {
     latestEnvironmentReceivedAt.value = null
     latestSensorFrame.value = null
     latestSensorWavelength.value = null
+    loadedExperimentId.value = null
   }
 
   function stopStreaming() {
@@ -161,6 +231,7 @@ export const useHistoryStore = defineStore('history', () => {
     latestEnvironmentReceivedAt,
     latestSensorFrame,
     latestSensorWavelength,
+    loadExperimentHistory,
     sensorHistory,
     sensorWavelengthNm,
     stopStreaming,

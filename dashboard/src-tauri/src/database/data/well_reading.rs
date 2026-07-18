@@ -22,3 +22,19 @@ pub fn list_readings_for_experiment(
         .order(captured_at_ms.asc())
         .load(conn)
 }
+
+pub fn list_recent_readings_for_experiment(
+    conn: &mut SqliteConnection,
+    target_experiment_id: i32,
+    max_rows: i64,
+) -> QueryResult<Vec<WellReading>> {
+    use crate::database::schema::well_readings::dsl::*;
+
+    let mut rows: Vec<WellReading> = well_readings
+        .filter(experiment_id.eq(target_experiment_id))
+        .order(captured_at_ms.desc())
+        .limit(max_rows)
+        .load(conn)?;
+    rows.reverse();
+    Ok(rows)
+}

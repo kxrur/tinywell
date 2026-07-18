@@ -22,6 +22,7 @@ use crate::app::experiment_app::{
     experiment_create, experiment_delete, experiment_list, experiment_set_active,
 };
 use crate::app::export_app::{export_csv_experiments, export_excel_experiments};
+use crate::app::history_app::history_load_experiment;
 use crate::app::serial_app::{
     greet, serial_connect, serial_disconnect, serial_list_ports, serial_send, serial_set_port,
     serial_status, subscribe_environment_frames, subscribe_sensor_frames,
@@ -43,6 +44,7 @@ pub fn run() {
         experiment_set_active,
         export_csv_experiments,
         export_excel_experiments,
+        history_load_experiment,
         serial_set_port,
         serial_connect,
         serial_disconnect,
