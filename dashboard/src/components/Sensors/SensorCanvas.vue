@@ -2,6 +2,19 @@
   <div class="space-y-4 p-4">
     <div class="flex justify-center">
       <div class="flex flex-col gap-4 p-6">
+        <div class="flex items-center justify-between gap-4">
+          <span class="text-sm font-medium text-muted-foreground">Wavelength</span>
+          <div v-if="wavelengthNm !== null" class="flex items-center gap-2">
+            <span
+              class="size-3 rounded-full border"
+              :style="{ backgroundColor: convertWavelengthToColor(wavelengthNm) }"
+              aria-hidden="true"
+            />
+            <span class="font-semibold tabular-nums">{{ wavelengthNm }} nm</span>
+          </div>
+          <span v-else class="text-sm text-muted-foreground">No data yet</span>
+        </div>
+
         <div
           v-for="(row, rowIndex) in layoutRows"
           :key="rowIndex"
@@ -26,7 +39,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
+import { convertWavelengthToColor } from '@/lib/wavelength'
 import { useHistoryStore, wavelengthEnumToNm } from '@/stores/history'
 
 interface Cell {
@@ -51,6 +65,7 @@ type SensorFrame = {
 }
 
 const historyStore = useHistoryStore()
+const wavelengthNm = computed(() => historyStore.sensorWavelengthNm)
 const layoutRows = [
   [null, 0, 1, 2],
   [3, 4, 5, 6],
