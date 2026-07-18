@@ -1,5 +1,6 @@
 <template>
-  <section class="mx-auto flex w-full max-w-2xl flex-col gap-6 rounded-2xl border bg-card p-6 shadow-sm">
+  <Card class="mx-auto w-full max-w-2xl">
+    <CardContent class="space-y-6">
     <div class="grid gap-2">
       <Label for="export-format">Export format</Label>
       <Select v-model="format">
@@ -35,7 +36,8 @@
       class="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
       {{ errorMessage }}
     </p>
-  </section>
+    </CardContent>
+  </Card>
 </template>
 
 <script setup lang="ts">

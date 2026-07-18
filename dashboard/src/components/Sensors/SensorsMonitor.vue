@@ -1,8 +1,7 @@
 <template>
-  <div
-    class="inline-flex max-w-full self-center flex-col gap-4 rounded-lg border bg-background p-4 xl:self-start"
-  >
-    <div class="flex items-center justify-between">
+  <Card class="max-w-full self-center gap-4 bg-background py-4 xl:self-start">
+    <CardHeader class="px-4">
+      <div class="flex items-center justify-between">
       <div>
         <div class="flex items-center gap-2">
           <Label class="text-lg font-semibold">Environment Monitor</Label>
@@ -35,12 +34,12 @@
           Live `0x83` telemetry from the MSP serial protocol.
         </p>
       </div>
-    </div>
+      </div>
+    </CardHeader>
 
-    <div
-      class="inline-block max-w-full self-center overflow-hidden rounded-lg border"
-    >
-      <Table>
+    <CardContent class="px-4">
+      <div class="max-w-full overflow-hidden rounded-lg border">
+        <Table>
         <TableHeader>
           <TableRow>
             <TableHead class="w-[220px]">Field</TableHead>
@@ -57,9 +56,10 @@
             <TableCell class="font-mono text-sm">{{ row.rawValue }}</TableCell>
           </TableRow>
         </TableBody>
-      </Table>
-    </div>
-  </div>
+        </Table>
+      </div>
+    </CardContent>
+  </Card>
 </template>
 
 <script setup lang="ts">
