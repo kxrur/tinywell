@@ -1,10 +1,10 @@
 <template>
   <div class="flex h-full min-h-0 flex-col gap-6 overflow-y-auto p-4">
 
-    <div v-if="streamError"
-      class="rounded-xl border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">
-      {{ streamError }}
-    </div>
+    <Alert v-if="streamError" variant="destructive">
+      <AlertTitle>Telemetry stream error</AlertTitle>
+      <AlertDescription>{{ streamError }}</AlertDescription>
+    </Alert>
 
     <Card class="gap-3 py-4">
       <CardHeader class="flex flex-row items-center justify-between gap-3 px-4">
