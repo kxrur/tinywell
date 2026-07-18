@@ -44,9 +44,16 @@ pub fn serial_connect(state: tauri::State<'_, Mutex<AppState>>) -> Result<(), St
 #[tauri::command]
 #[specta::specta]
 pub fn serial_disconnect(state: tauri::State<'_, Mutex<AppState>>) -> Result<(), String> {
-    let serial = serial_manager(&state)?;
+    let (serial, telemetry) = {
+        let app = state
+            .lock()
+            .map_err(|_| "State lock poisoned".to_string())?;
+        (app.serial.clone(), app.telemetry.clone())
+    };
     info!("Frontend requested serial disconnect");
-    serial.disconnect().map_err(|err| err.to_string())
+    serial.disconnect().map_err(|err| err.to_string())?;
+    telemetry.stop();
+    Ok(())
 }
 
 #[tauri::command]

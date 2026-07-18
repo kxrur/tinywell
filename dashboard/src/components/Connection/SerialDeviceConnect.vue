@@ -52,9 +52,11 @@
 <script setup lang="ts">
 import { commands } from '@/bindings'
 import { toast } from 'vue-sonner'
+import { useHistoryStore } from '@/stores/history'
 import { useSerialStore } from '@/stores/serial'
 
 const serialStore = useSerialStore()
+const historyStore = useHistoryStore()
 const availablePorts = ref<string[]>([])
 const selectedPort = ref(serialStore.configuredPort)
 const isLoadingPorts = ref(false)
@@ -114,6 +116,7 @@ async function connectToSelectedPort() {
 
   await serialStore.setPort(selectedPort.value)
   await serialStore.ensureConnected(selectedPort.value)
+  await historyStore.ensureStreaming()
 }
 
 async function toggleConnection() {
@@ -121,6 +124,7 @@ async function toggleConnection() {
   try {
     if (serialStore.isConnected) {
       await serialStore.disconnect()
+      historyStore.stopStreaming()
       return
     }
     await connectToSelectedPort()

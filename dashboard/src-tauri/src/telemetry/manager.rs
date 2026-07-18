@@ -19,6 +19,7 @@ pub struct TelemetryManager {
 struct TelemetrySubscribers<T> {
     channels: Vec<Channel<T>>,
     worker_started: bool,
+    generation: u64,
 }
 
 impl<T> Default for TelemetrySubscribers<T> {
@@ -26,6 +27,7 @@ impl<T> Default for TelemetrySubscribers<T> {
         Self {
             channels: Vec::new(),
             worker_started: false,
+            generation: 0,
         }
     }
 }
@@ -37,20 +39,21 @@ impl TelemetryManager {
         serial: Arc<SerialManager>,
         app_handle: AppHandle,
     ) {
-        let should_start_worker = {
+        let generation = {
             let mut subscribers = self.sensor.lock().expect("sensor telemetry lock");
             subscribers.channels.push(channel);
             if subscribers.worker_started {
-                false
+                None
             } else {
                 subscribers.worker_started = true;
-                true
+                subscribers.generation += 1;
+                Some(subscribers.generation)
             }
         };
 
-        if should_start_worker {
+        if let Some(generation) = generation {
             let telemetry = Arc::clone(self);
-            std::thread::spawn(move || sensor_worker(serial, app_handle, telemetry));
+            std::thread::spawn(move || sensor_worker(serial, app_handle, telemetry, generation));
         }
     }
 
@@ -60,21 +63,37 @@ impl TelemetryManager {
         serial: Arc<SerialManager>,
         app_handle: AppHandle,
     ) {
-        let should_start_worker = {
+        let generation = {
             let mut subscribers = self.environment.lock().expect("environment telemetry lock");
             subscribers.channels.push(channel);
             if subscribers.worker_started {
-                false
+                None
             } else {
                 subscribers.worker_started = true;
-                true
+                subscribers.generation += 1;
+                Some(subscribers.generation)
             }
         };
 
-        if should_start_worker {
+        if let Some(generation) = generation {
             let telemetry = Arc::clone(self);
-            std::thread::spawn(move || environment_worker(serial, app_handle, telemetry));
+            std::thread::spawn(move || {
+                environment_worker(serial, app_handle, telemetry, generation)
+            });
         }
+    }
+
+    pub fn stop(&self) {
+        stop_subscribers(&self.sensor, "photosensor");
+        stop_subscribers(&self.environment, "environment");
+    }
+
+    fn sensor_worker_active(&self, generation: u64) -> bool {
+        worker_active(&self.sensor, generation)
+    }
+
+    fn environment_worker_active(&self, generation: u64) -> bool {
+        worker_active(&self.environment, generation)
     }
 
     fn broadcast_sensor(&self, frame: &SensorFrame) {
@@ -92,19 +111,36 @@ impl TelemetryManager {
     }
 }
 
+fn stop_subscribers<T>(subscribers: &Mutex<TelemetrySubscribers<T>>, name: &str) {
+    let mut subscribers = subscribers.lock().expect("telemetry lock");
+    subscribers.channels.clear();
+    subscribers.worker_started = false;
+    subscribers.generation += 1;
+    info!("Shared {} telemetry worker stopped", name);
+}
+
+fn worker_active<T>(subscribers: &Mutex<TelemetrySubscribers<T>>, generation: u64) -> bool {
+    let subscribers = subscribers.lock().expect("telemetry lock");
+    subscribers.worker_started && subscribers.generation == generation
+}
+
 fn sensor_worker(
     serial: Arc<SerialManager>,
     app_handle: AppHandle,
     telemetry: Arc<TelemetryManager>,
+    generation: u64,
 ) {
     info!("Shared photosensor telemetry worker started");
 
-    loop {
+    while telemetry.sensor_worker_active(generation) {
         match serial.send_request(
             SerialRequest::PhotosensorResults,
             Duration::from_millis(1500),
         ) {
             Ok(SerialResponse::PhotosensorResults { wavelength, values }) => {
+                if !telemetry.sensor_worker_active(generation) {
+                    break;
+                }
                 let frame = SensorFrame { values, wavelength };
                 if let Err(err) = persist_sensor_frame(&app_handle, &frame) {
                     warn!("Failed to persist photosensor frame: {}", err);
@@ -117,16 +153,19 @@ fn sensor_worker(
 
         std::thread::sleep(Duration::from_millis(500));
     }
+
+    info!("Shared photosensor telemetry worker exited");
 }
 
 fn environment_worker(
     serial: Arc<SerialManager>,
     app_handle: AppHandle,
     telemetry: Arc<TelemetryManager>,
+    generation: u64,
 ) {
     info!("Shared environment telemetry worker started");
 
-    loop {
+    while telemetry.environment_worker_active(generation) {
         match serial.send_request(SerialRequest::EnvironmentInfo, Duration::from_millis(1500)) {
             Ok(SerialResponse::EnvironmentInfo {
                 well_temp,
@@ -134,6 +173,9 @@ fn environment_worker(
                 ambient_pressure,
                 ambient_humidity,
             }) => {
+                if !telemetry.environment_worker_active(generation) {
+                    break;
+                }
                 let frame = EnvironmentFrame {
                     well_temp_c: well_temp,
                     ambient_temp_raw: ambient_temp,
@@ -151,6 +193,8 @@ fn environment_worker(
 
         std::thread::sleep(Duration::from_millis(500));
     }
+
+    info!("Shared environment telemetry worker exited");
 }
 
 fn persist_environment_frame(

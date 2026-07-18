@@ -1,6 +1,6 @@
 import { Channel } from '@tauri-apps/api/core'
 import { defineStore } from 'pinia'
-import { computed, reactive, ref } from 'vue'
+import { computed, reactive, ref, watch } from 'vue'
 import { commands, type EnvironmentFrame, type SensorFrame } from '@/bindings'
 import { useSerialStore } from '@/stores/serial'
 
@@ -70,7 +70,9 @@ export const useHistoryStore = defineStore('history', () => {
 
     streamError.value = ''
     startPromise.value = (async () => {
-      await serialStore.ensureConnected()
+      if (!serialStore.isConnected) {
+        throw new Error('Connect a serial device before starting telemetry')
+      }
 
       const sensorChannel = new Channel<SensorFrame>()
       sensorChannel.onmessage = frame => {
@@ -139,6 +141,17 @@ export const useHistoryStore = defineStore('history', () => {
     latestSensorWavelength.value = null
   }
 
+  function stopStreaming() {
+    isStreaming.value = false
+    startPromise.value = null
+  }
+
+  watch(() => serialStore.isConnected, isConnected => {
+    if (!isConnected) {
+      stopStreaming()
+    }
+  })
+
   return {
     clearHistory,
     ensureStreaming,
@@ -150,6 +163,7 @@ export const useHistoryStore = defineStore('history', () => {
     latestSensorWavelength,
     sensorHistory,
     sensorWavelengthNm,
+    stopStreaming,
     streamError,
   }
 })

@@ -19,15 +19,23 @@
       </div>
 
       <div v-if="activeTab === 'control'" class="min-h-0 flex-1">
-        <NodeCanvas />
+        <div v-if="!serialStore.isConnected" class="flex h-full items-center justify-center rounded-2xl border border-dashed p-8 text-center text-sm text-muted-foreground">
+          Connect a serial device from the sidebar to control the instrument.
+        </div>
+        <NodeCanvas v-else />
       </div>
 
       <div
         v-if="activeTab === 'info'"
         class="flex min-h-0 flex-1 flex-col items-center gap-6"
       >
-        <SensorCanvas />
-        <SensorsMonitor />
+        <div v-if="!serialStore.isConnected" class="flex h-full w-full items-center justify-center rounded-2xl border border-dashed p-8 text-center text-sm text-muted-foreground">
+          Connect a serial device from the sidebar to view live sensor data.
+        </div>
+        <template v-else>
+          <SensorCanvas />
+          <SensorsMonitor />
+        </template>
       </div>
 
       <div v-if="activeTab === 'history'" class="min-h-0 flex-1">
@@ -41,29 +49,17 @@
   </div>
 </template>
 <script setup lang="ts">
-import { computed, watch } from 'vue'
+import { computed } from 'vue'
 import { Save } from 'lucide-vue-next'
-import { toast } from 'vue-sonner'
 import ExperimentExport from '@/components/Export/ExperimentExport.vue'
 import { useExperimentStore } from '@/stores/experiments'
-import { useHistoryStore } from '@/stores/history'
 import { useSerialStore } from '@/stores/serial'
 
 const activeTab = ref<'control' | 'info' | 'history' | 'export'>('control')
 const experimentStore = useExperimentStore()
-const historyStore = useHistoryStore()
 const serialStore = useSerialStore()
 const isRecording = computed(
   () => serialStore.isConnected && experimentStore.activeExperiment !== null,
 )
 
-watch(activeTab, tab => {
-  if (tab === 'info' || tab === 'history') {
-    historyStore.ensureStreaming().catch(error => {
-      const message =
-        error instanceof Error ? error.message : 'Failed to start telemetry stream'
-      toast.error('Telemetry failed to start', { description: message })
-    })
-  }
-})
 </script>
