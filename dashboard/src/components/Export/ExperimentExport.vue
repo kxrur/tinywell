@@ -55,6 +55,7 @@
 import { open } from '@tauri-apps/plugin-dialog'
 import { Download, FolderOutput } from 'lucide-vue-next'
 import { computed, ref } from 'vue'
+import { toast } from 'vue-sonner'
 import { commands } from '@/bindings'
 import { useExperimentStore } from '@/stores/experiments'
 
@@ -101,6 +102,7 @@ async function exportExperiments(experimentIds: number[] | null) {
     resultMessage.value = `Exported ${result.data.experimentsExported} experiment${result.data.experimentsExported === 1 ? '' : 's'} to ${result.data.filesWritten} ${kind}${result.data.filesWritten === 1 ? '' : 's'}.`
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : 'Export failed'
+    toast.error('Export failed', { description: errorMessage.value })
   } finally {
     isExporting.value = false
   }

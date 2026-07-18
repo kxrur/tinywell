@@ -37,7 +37,7 @@
         isConnecting ||
         (!serialStore.isConnected && availablePorts.length === 0)
       "
-      @click="serialStore.isConnected ? serialStore.disconnect() : connectToSelectedPort()"
+      @click="toggleConnection"
       variant="outline"
     >
       {{ isConnecting ? 'Connecting...' : serialStore.isConnected ? 'Disconnect' : 'Connect' }}
@@ -51,6 +51,7 @@
 
 <script setup lang="ts">
 import { commands } from '@/bindings'
+import { toast } from 'vue-sonner'
 import { useSerialStore } from '@/stores/serial'
 
 const serialStore = useSerialStore()
@@ -93,6 +94,7 @@ async function loadPorts() {
   } catch (error) {
     loadError.value =
       error instanceof Error ? error.message : 'Failed to load serial ports'
+    toast.error('Failed to load serial ports', { description: loadError.value })
   } finally {
     isLoadingPorts.value = false
   }
@@ -114,6 +116,21 @@ async function connectToSelectedPort() {
   await serialStore.ensureConnected(selectedPort.value)
 }
 
+async function toggleConnection() {
+  loadError.value = ''
+  try {
+    if (serialStore.isConnected) {
+      await serialStore.disconnect()
+      return
+    }
+    await connectToSelectedPort()
+  } catch (error) {
+    loadError.value =
+      error instanceof Error ? error.message : 'Failed to update serial connection'
+    toast.error('Serial connection failed', { description: loadError.value })
+  }
+}
+
 watch(selectedPort, port => {
   if (!port) {
     return
@@ -122,6 +139,7 @@ watch(selectedPort, port => {
   serialStore.setPort(port).catch(error => {
     loadError.value =
       error instanceof Error ? error.message : 'Failed to set serial port'
+    toast.error('Failed to set serial port', { description: loadError.value })
   })
 })
 

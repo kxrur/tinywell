@@ -43,6 +43,7 @@
 <script setup lang="ts">
 import { computed, watch } from 'vue'
 import { Save } from 'lucide-vue-next'
+import { toast } from 'vue-sonner'
 import ExperimentExport from '@/components/Export/ExperimentExport.vue'
 import { useExperimentStore } from '@/stores/experiments'
 import { useHistoryStore } from '@/stores/history'
@@ -58,7 +59,11 @@ const isRecording = computed(
 
 watch(activeTab, tab => {
   if (tab === 'info' || tab === 'history') {
-    historyStore.ensureStreaming().catch(() => {})
+    historyStore.ensureStreaming().catch(error => {
+      const message =
+        error instanceof Error ? error.message : 'Failed to start telemetry stream'
+      toast.error('Telemetry failed to start', { description: message })
+    })
   }
 })
 </script>

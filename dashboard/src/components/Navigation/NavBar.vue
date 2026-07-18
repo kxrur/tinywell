@@ -164,6 +164,7 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { Plus, Beaker, Trash2 } from 'lucide-vue-next'
+import { toast } from 'vue-sonner'
 import type { Experiment } from '@/bindings'
 import { useExperimentStore } from '@/stores/experiments'
 
@@ -179,8 +180,10 @@ const experimentToDelete = ref<Experiment | null>(null)
 const deleteError = ref('')
 
 function showError(error: unknown) {
-  errorMessage.value =
+  const message =
     error instanceof Error ? error.message : 'Experiment action failed'
+  errorMessage.value = message
+  toast.error('Experiment action failed', { description: message })
 }
 
 function openCreateDialog() {
@@ -204,6 +207,7 @@ async function createExperiment() {
   } catch (error) {
     dialogError.value =
       error instanceof Error ? error.message : 'Failed to create experiment'
+    toast.error('Failed to create experiment', { description: dialogError.value })
   } finally {
     isCreating.value = false
   }
@@ -229,6 +233,7 @@ async function deleteExperiment() {
   } catch (error) {
     deleteError.value =
       error instanceof Error ? error.message : 'Failed to delete experiment'
+    toast.error('Failed to delete experiment', { description: deleteError.value })
   } finally {
     isDeleting.value = false
   }

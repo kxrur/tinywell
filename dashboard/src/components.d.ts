@@ -105,6 +105,7 @@ declare module 'vue' {
     SidebarTrigger: typeof import('./components/ui/sidebar/SidebarTrigger.vue')['default']
     Skeleton: typeof import('./components/ui/skeleton/Skeleton.vue')['default']
     Slider: typeof import('./components/ui/slider/Slider.vue')['default']
+    Sonner: typeof import('./components/ui/sonner/Sonner.vue')['default']
     Switch: typeof import('./components/ui/switch/Switch.vue')['default']
     Table: typeof import('./components/ui/table/Table.vue')['default']
     TableBody: typeof import('./components/ui/table/TableBody.vue')['default']
