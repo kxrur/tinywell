@@ -1,5 +1,6 @@
 <template>
-  <div class="flex h-full min-h-0 flex-col gap-6 overflow-y-auto p-4">
+  <ScrollArea class="h-full min-h-0">
+    <div class="flex min-h-0 flex-col gap-6 p-4">
 
     <Alert v-if="streamError" variant="destructive">
       <AlertTitle>Telemetry stream error</AlertTitle>
@@ -51,7 +52,8 @@
         <VChart class="chart" :option="sensorOption" autoresize />
       </CardContent>
     </Card>
-  </div>
+    </div>
+  </ScrollArea>
 </template>
 
 <script setup lang="ts">

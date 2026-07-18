@@ -8,9 +8,9 @@
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger as-child>
-                <button
-                  type="button"
-                  class="text-muted-foreground transition-colors hover:text-foreground"
+                <Button
+                  variant="ghost"
+                  size="icon-xs"
                   :aria-label="
                     lastUpdated
                       ? `Last updated at ${lastUpdated}`
@@ -18,7 +18,7 @@
                   "
                 >
                   <Info class="size-4" />
-                </button>
+                </Button>
               </TooltipTrigger>
               <TooltipContent>
                 {{
