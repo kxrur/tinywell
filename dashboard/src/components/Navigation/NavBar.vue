@@ -126,38 +126,34 @@
       </DialogContent>
     </Dialog>
 
-    <Dialog v-model:open="isDeleteDialogOpen">
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Delete experiment?</DialogTitle>
-          <DialogDescription>
+    <AlertDialog v-model:open="isDeleteDialogOpen">
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Delete experiment?</AlertDialogTitle>
+          <AlertDialogDescription>
             This permanently deletes {{ experimentToDelete?.name }} and all of
             its recorded telemetry. This action cannot be undone.
-          </DialogDescription>
-        </DialogHeader>
+          </AlertDialogDescription>
+        </AlertDialogHeader>
         <p v-if="deleteError" class="text-sm text-destructive">
           {{ deleteError }}
         </p>
-        <DialogFooter>
-          <Button
-            type="button"
-            variant="outline"
+        <AlertDialogFooter>
+          <AlertDialogCancel
             :disabled="isDeleting"
-            @click="isDeleteDialogOpen = false"
           >
             Cancel
-          </Button>
-          <Button
-            type="button"
-            variant="destructive"
+          </AlertDialogCancel>
+          <AlertDialogAction
+            class="bg-destructive text-white hover:bg-destructive/90"
             :disabled="isDeleting"
             @click="deleteExperiment"
           >
             {{ isDeleting ? 'Deleting…' : 'Delete experiment' }}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   </div>
 </template>
 
