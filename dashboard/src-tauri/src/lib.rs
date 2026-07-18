@@ -33,24 +33,26 @@ pub fn run() {
         .try_init();
     info!("Tinywell backend starting");
 
-    let builder = Builder::<tauri::Wry>::new().commands(collect_commands![
-        greet,
-        experiment_create,
-        experiment_delete,
-        experiment_list,
-        experiment_set_active,
-        export_csv_experiments,
-        export_excel_experiments,
-        history_load_experiment,
-        serial_set_port,
-        serial_connect,
-        serial_disconnect,
-        serial_status,
-        serial_list_ports,
-        serial_send,
-        subscribe_sensor_frames,
-        subscribe_environment_frames
-    ]);
+    let builder = Builder::<tauri::Wry>::new()
+        .commands(collect_commands![
+            greet,
+            experiment_create,
+            experiment_delete,
+            experiment_list,
+            experiment_set_active,
+            export_csv_experiments,
+            export_excel_experiments,
+            history_load_experiment,
+            serial_set_port,
+            serial_connect,
+            serial_disconnect,
+            serial_status,
+            serial_list_ports,
+            serial_send,
+            subscribe_sensor_frames,
+            subscribe_environment_frames
+        ])
+        .events(collect_events![]);
 
     #[cfg(debug_assertions)] // <- Only export on non-release builds
     builder
