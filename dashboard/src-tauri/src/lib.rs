@@ -11,12 +11,9 @@ mod app;
 mod database;
 mod export;
 mod model;
-mod serial;
+pub mod serial;
 mod state;
 mod telemetry;
-
-#[cfg(test)]
-mod test;
 
 use crate::app::experiment_app::{
     experiment_create, experiment_delete, experiment_list, experiment_set_active,

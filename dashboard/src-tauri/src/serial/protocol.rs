@@ -3,9 +3,12 @@ use specta::Type;
 
 pub const FRAME_DELIM: u8 = 0xB3;
 pub const FRAME_ERROR: u8 = 0xE0;
+pub const FRAME_TERMINATOR: u8 = b'\n';
 
 pub const FRAME_PING: u8 = 0x00;
 pub const FRAME_SYSTEM_STATUS: u8 = 0x80;
+pub const FRAME_EXPERIMENT_STATUS: u8 = 0x81;
+pub const FRAME_HARDWARE_HEALTH: u8 = 0x82;
 pub const FRAME_ENVIRONMENT_INFO: u8 = 0x83;
 pub const FRAME_PHOTOSENSOR_RESULTS: u8 = 0x84;
 pub const FRAME_SET_LED_STATE: u8 = 0x03;
@@ -40,6 +43,8 @@ impl LedAction {
 pub enum SerialRequest {
     Ping,
     SystemStatus,
+    ExperimentStatus,
+    HardwareHealth,
     EnvironmentInfo,
     PhotosensorResults,
     SetLedState {
@@ -56,6 +61,16 @@ pub enum SerialResponse {
         fw: u8,
         state: u8,
         uptime: u32,
+    },
+    ExperimentStatus {
+        last_state: u8,
+        progress: u8,
+        elapsed_or_started_at_uptime: u32,
+    },
+    HardwareHealth {
+        pump_current: u16,
+        heater_current: u16,
+        vref_current: u16,
     },
     EnvironmentInfo {
         well_temp: u16,
@@ -89,11 +104,12 @@ pub fn checksum(frame_id: u8, payload: &[u8]) -> u8 {
 }
 
 pub fn build_frame(frame_id: u8, payload: &[u8]) -> Vec<u8> {
-    let mut out = Vec::with_capacity(3 + payload.len());
+    let mut out = Vec::with_capacity(4 + payload.len());
     out.push(FRAME_DELIM);
     out.push(frame_id);
     out.extend_from_slice(payload);
     out.push(checksum(frame_id, payload));
+    out.push(FRAME_TERMINATOR);
     out
 }
 
@@ -101,6 +117,8 @@ pub fn expected_payload_len(frame_id: u8) -> Option<usize> {
     match frame_id {
         FRAME_PING => Some(0),
         FRAME_SYSTEM_STATUS => Some(5),
+        FRAME_EXPERIMENT_STATUS => Some(5),
+        FRAME_HARDWARE_HEALTH => Some(6),
         FRAME_ENVIRONMENT_INFO => Some(14),
         FRAME_PHOTOSENSOR_RESULTS => Some(57),
         FRAME_TELECOMMAND_ACK => Some(2),
@@ -113,6 +131,8 @@ pub fn request_frame(request: &SerialRequest) -> (u8, Vec<u8>) {
     match request {
         SerialRequest::Ping => (FRAME_PING, Vec::new()),
         SerialRequest::SystemStatus => (FRAME_SYSTEM_STATUS, Vec::new()),
+        SerialRequest::ExperimentStatus => (FRAME_EXPERIMENT_STATUS, Vec::new()),
+        SerialRequest::HardwareHealth => (FRAME_HARDWARE_HEALTH, Vec::new()),
         SerialRequest::EnvironmentInfo => (FRAME_ENVIRONMENT_INFO, Vec::new()),
         SerialRequest::PhotosensorResults => (FRAME_PHOTOSENSOR_RESULTS, Vec::new()),
         SerialRequest::SetLedState {
@@ -136,6 +156,35 @@ pub fn response_from_frame(frame: Frame) -> SerialResponse {
                 let state = fw_and_state & 0x07;
                 let uptime = read_u32_le(&frame.payload[1..5]);
                 SerialResponse::SystemStatus { fw, state, uptime }
+            } else {
+                SerialResponse::Unknown {
+                    frame_id: frame.frame_id,
+                    payload: frame.payload,
+                }
+            }
+        }
+        FRAME_EXPERIMENT_STATUS => {
+            if frame.payload.len() == 5 {
+                let last_state_and_progress = frame.payload[0];
+                SerialResponse::ExperimentStatus {
+                    last_state: (last_state_and_progress >> 3) & 0x1F,
+                    progress: last_state_and_progress & 0x07,
+                    elapsed_or_started_at_uptime: read_u32_le(&frame.payload[1..5]),
+                }
+            } else {
+                SerialResponse::Unknown {
+                    frame_id: frame.frame_id,
+                    payload: frame.payload,
+                }
+            }
+        }
+        FRAME_HARDWARE_HEALTH => {
+            if frame.payload.len() == 6 {
+                SerialResponse::HardwareHealth {
+                    pump_current: read_u16_le(&frame.payload[0..2]),
+                    heater_current: read_u16_le(&frame.payload[2..4]),
+                    vref_current: read_u16_le(&frame.payload[4..6]),
+                }
             } else {
                 SerialResponse::Unknown {
                     frame_id: frame.frame_id,

@@ -8,8 +8,8 @@ use serialport::SerialPort;
 use super::errors::SerialError;
 use super::protocol::{
     build_frame, request_frame, response_from_frame, Parser, SerialRequest, SerialResponse,
-    FRAME_ENVIRONMENT_INFO, FRAME_ERROR, FRAME_PHOTOSENSOR_RESULTS, FRAME_PING,
-    FRAME_SYSTEM_STATUS, FRAME_TELECOMMAND_ACK,
+    FRAME_ENVIRONMENT_INFO, FRAME_ERROR, FRAME_EXPERIMENT_STATUS, FRAME_HARDWARE_HEALTH,
+    FRAME_PHOTOSENSOR_RESULTS, FRAME_PING, FRAME_SYSTEM_STATUS, FRAME_TELECOMMAND_ACK,
 };
 use log::{debug, error, info};
 
@@ -156,6 +156,8 @@ fn expected_response_id(request: &SerialRequest) -> u8 {
     match request {
         SerialRequest::Ping => FRAME_PING,
         SerialRequest::SystemStatus => FRAME_SYSTEM_STATUS,
+        SerialRequest::ExperimentStatus => FRAME_EXPERIMENT_STATUS,
+        SerialRequest::HardwareHealth => FRAME_HARDWARE_HEALTH,
         SerialRequest::EnvironmentInfo => FRAME_ENVIRONMENT_INFO,
         SerialRequest::PhotosensorResults => FRAME_PHOTOSENSOR_RESULTS,
         SerialRequest::SetLedState { .. } => FRAME_TELECOMMAND_ACK,
