@@ -6,30 +6,10 @@
       <div>
         <div class="flex items-center gap-2">
           <Label class="text-lg font-semibold">Environment Monitor</Label>
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger as-child>
-                <button
-                  type="button"
-                  class="text-muted-foreground transition-colors hover:text-foreground"
-                  :aria-label="
-                    lastUpdated
-                      ? `Last updated at ${lastUpdated}`
-                      : 'No telemetry received yet'
-                  "
-                >
-                  <Info class="size-4" />
-                </button>
-              </TooltipTrigger>
-              <TooltipContent>
-                {{
-                  lastUpdated
-                    ? `Updated at ${lastUpdated}`
-                    : 'No telemetry received yet'
-                }}
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+          <TelemetryUpdatedAt
+            :received-at="historyStore.latestEnvironmentReceivedAt"
+            source="Environment"
+          />
         </div>
         <p class="text-sm text-muted-foreground">
           Live `0x83` telemetry from the MSP serial protocol.
@@ -64,23 +44,17 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { Info } from 'lucide-vue-next'
+import TelemetryUpdatedAt from '@/components/TelemetryUpdatedAt.vue'
 import { useHistoryStore } from '@/stores/history'
 
 const historyStore = useHistoryStore()
 const environment = computed(() => historyStore.latestEnvironmentFrame)
-const lastUpdated = computed(() =>
-  historyStore.latestEnvironmentReceivedAt === null
-    ? ''
-    : new Date(historyStore.latestEnvironmentReceivedAt).toLocaleTimeString(),
-)
-
 const ambientTempC = computed(() =>
   environment.value ? environment.value.ambientTempRaw / 100 : null,
 )
 
 const ambientPressureHpa = computed(() =>
-  environment.value ? environment.value.ambientPressureRaw / 100 : null,
+  environment.value ? environment.value.ambientPressureRaw / 25600 : null,
 )
 
 const ambientHumidityPercent = computed(() =>
@@ -116,7 +90,7 @@ const rows = computed(() => {
       key: 'ambient-pressure',
       label: 'Ambient Pressure',
       displayValue: `${ambientPressureHpa.value?.toFixed(2)} hPa`,
-      rawValue: `${environment.value.ambientPressureRaw} Pa`,
+      rawValue: `${environment.value.ambientPressureRaw} Q24.8 Pa`,
     },
     {
       key: 'ambient-humidity',

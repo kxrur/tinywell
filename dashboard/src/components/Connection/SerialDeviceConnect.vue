@@ -40,7 +40,13 @@
       @click="toggleConnection"
       variant="outline"
     >
-      {{ isConnecting ? 'Connecting...' : serialStore.isConnected ? 'Disconnect' : 'Connect' }}
+      {{
+        isConnecting
+          ? 'Connecting...'
+          : serialStore.isConnected
+            ? 'Disconnect'
+            : 'Connect'
+      }}
     </Button>
 
     <p v-if="loadError" class="text-xs text-destructive">
@@ -53,10 +59,12 @@
 import { commands } from '@/bindings'
 import { toast } from 'vue-sonner'
 import { useHistoryStore } from '@/stores/history'
+import { useInstrumentStore } from '@/stores/instrument'
 import { useSerialStore } from '@/stores/serial'
 
 const serialStore = useSerialStore()
 const historyStore = useHistoryStore()
+const instrumentStore = useInstrumentStore()
 const availablePorts = ref<string[]>([])
 const selectedPort = ref(serialStore.configuredPort)
 const isLoadingPorts = ref(false)
@@ -117,6 +125,7 @@ async function connectToSelectedPort() {
   await serialStore.setPort(selectedPort.value)
   await serialStore.ensureConnected(selectedPort.value)
   await historyStore.ensureStreaming()
+  await instrumentStore.ensureStreaming()
 }
 
 async function toggleConnection() {
@@ -125,12 +134,15 @@ async function toggleConnection() {
     if (serialStore.isConnected) {
       await serialStore.disconnect()
       historyStore.stopStreaming()
+      instrumentStore.stopStreaming()
       return
     }
     await connectToSelectedPort()
   } catch (error) {
     loadError.value =
-      error instanceof Error ? error.message : 'Failed to update serial connection'
+      error instanceof Error
+        ? error.message
+        : 'Failed to update serial connection'
     toast.error('Serial connection failed', { description: loadError.value })
   }
 }

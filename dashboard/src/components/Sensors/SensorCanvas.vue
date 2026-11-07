@@ -22,11 +22,38 @@
         </div>
       </div>
     </div>
+
+    <details
+      class="mx-auto w-full max-w-xl rounded-lg border bg-background p-3"
+    >
+      <summary class="cursor-pointer text-sm font-medium">
+        Raw photosensor readings
+        <span class="text-muted-foreground">
+          ({{ latestFrame?.values.length ?? 0 }} wells, lux)
+        </span>
+      </summary>
+      <div
+        v-if="latestFrame"
+        class="mt-3 grid grid-cols-2 gap-x-4 gap-y-1 text-sm sm:grid-cols-3"
+      >
+        <div
+          v-for="(value, index) in latestFrame.values"
+          :key="index"
+          class="flex justify-between gap-2 border-b py-1"
+        >
+          <span class="text-muted-foreground">Well {{ index + 1 }}</span>
+          <span class="font-mono">{{ value.toLocaleString() }} lx</span>
+        </div>
+      </div>
+      <p v-else class="mt-3 text-sm text-muted-foreground">
+        Waiting for photosensor data.
+      </p>
+    </details>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useHistoryStore, wavelengthEnumToNm } from '@/stores/history'
 
 interface Cell {
@@ -51,6 +78,7 @@ type SensorFrame = {
 }
 
 const historyStore = useHistoryStore()
+const latestFrame = computed(() => historyStore.latestSensorFrame)
 const layoutRows = [
   [null, 0, 1, 2],
   [3, 4, 5, 6],
