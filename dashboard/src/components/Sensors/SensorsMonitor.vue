@@ -1,45 +1,47 @@
 <template>
-  <div
-    class="inline-flex max-w-full self-center flex-col gap-4 rounded-lg border bg-background p-4"
-  >
-    <div class="flex items-center justify-between">
-      <div>
-        <div class="flex items-center gap-2">
-          <Label class="text-lg font-semibold">Environment Monitor</Label>
-          <TelemetryUpdatedAt
-            :received-at="historyStore.latestEnvironmentReceivedAt"
-            source="Environment"
-          />
+  <Card class="max-w-full self-center gap-4 bg-background py-4 xl:self-start">
+    <CardHeader class="px-4">
+      <div class="flex items-center justify-between">
+        <div>
+          <div class="flex items-center gap-2">
+            <Label class="text-lg font-semibold">Environment Monitor</Label>
+            <TelemetryUpdatedAt
+              :received-at="historyStore.latestEnvironmentReceivedAt"
+              source="Environment"
+            />
+          </div>
+          <p class="text-sm text-muted-foreground">
+            Live `0x83` telemetry from the MSP serial protocol.
+          </p>
         </div>
-        <p class="text-sm text-muted-foreground">
-          Live `0x83` telemetry from the MSP serial protocol.
-        </p>
       </div>
-    </div>
+    </CardHeader>
 
-    <div
-      class="inline-block max-w-full self-center overflow-hidden rounded-lg border"
-    >
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead class="w-[220px]">Field</TableHead>
-            <TableHead>Display Value</TableHead>
-            <TableHead>Raw Value</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          <TableRow v-for="row in rows" :key="row.key">
-            <TableCell class="font-medium">{{ row.label }}</TableCell>
-            <TableCell>
-              <Badge variant="outline">{{ row.displayValue }}</Badge>
-            </TableCell>
-            <TableCell class="font-mono text-sm">{{ row.rawValue }}</TableCell>
-          </TableRow>
-        </TableBody>
-      </Table>
-    </div>
-  </div>
+    <CardContent class="px-4">
+      <div class="max-w-full overflow-hidden rounded-lg border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead class="w-[220px]">Field</TableHead>
+              <TableHead>Display Value</TableHead>
+              <TableHead>Raw Value</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            <TableRow v-for="row in rows" :key="row.key">
+              <TableCell class="font-medium">{{ row.label }}</TableCell>
+              <TableCell>
+                <Badge variant="outline">{{ row.displayValue }}</Badge>
+              </TableCell>
+              <TableCell class="font-mono text-sm">{{
+                row.rawValue
+              }}</TableCell>
+            </TableRow>
+          </TableBody>
+        </Table>
+      </div>
+    </CardContent>
+  </Card>
 </template>
 
 <script setup lang="ts">

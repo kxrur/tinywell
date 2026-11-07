@@ -1,39 +1,14 @@
 <template>
-  <div class="flex h-full min-h-0 flex-col gap-6 overflow-y-auto p-4">
-    <div
-      class="flex flex-wrap items-end justify-between gap-4 rounded-2xl border bg-card px-5 py-4 shadow-sm"
-    >
-      <div>
-        <p class="text-xs uppercase tracking-[0.24em] text-muted-foreground">
-          History
-        </p>
-        <h2 class="text-2xl font-semibold tracking-tight">
-          Live telemetry history
-        </h2>
-        <p class="text-sm text-muted-foreground">
-          Environment values share one chart; photosensor channels share
-          another.
-        </p>
-      </div>
+  <ScrollArea class="h-full min-h-0">
+    <div class="flex min-h-0 flex-col gap-6 p-4">
 
-      <button
-        type="button"
-        class="rounded-lg border px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
-        @click="historyStore.clearHistory"
-      >
-        Clear history
-      </button>
-    </div>
+    <Alert v-if="streamError" variant="destructive">
+      <AlertTitle>Telemetry stream error</AlertTitle>
+      <AlertDescription>{{ streamError }}</AlertDescription>
+    </Alert>
 
-    <div
-      v-if="streamError"
-      class="rounded-xl border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive"
-    >
-      {{ streamError }}
-    </div>
-
-    <section class="space-y-3 rounded-2xl border bg-card p-4 shadow-sm">
-      <div class="flex items-center justify-between gap-3">
+    <Card class="gap-3 py-4">
+      <CardHeader class="flex flex-row items-center justify-between gap-3 px-4">
         <div>
           <h3 class="text-lg font-semibold">Environment</h3>
           <p class="text-sm text-muted-foreground">
@@ -44,9 +19,9 @@
         <p class="text-sm text-muted-foreground">
           {{ environmentPointCount }} points
         </p>
-      </div>
+      </CardHeader>
 
-      <div class="grid gap-4 xl:grid-cols-2">
+      <CardContent class="grid gap-4 px-4 xl:grid-cols-2">
         <div class="rounded-2xl border bg-background/60 p-3">
           <VChart class="chart" :option="temperatureOption" autoresize />
         </div>
@@ -56,11 +31,11 @@
         <div class="rounded-2xl border bg-background/60 p-3 xl:col-span-2">
           <VChart class="chart" :option="humidityOption" autoresize />
         </div>
-      </div>
-    </section>
+      </CardContent>
+    </Card>
 
-    <section class="space-y-3 rounded-2xl border bg-card p-4 shadow-sm">
-      <div class="flex items-center justify-between gap-3">
+    <Card class="gap-3 py-4">
+      <CardHeader class="flex flex-row items-center justify-between gap-3 px-4">
         <div>
           <h3 class="text-lg font-semibold">Photosensors</h3>
           <p class="text-sm text-muted-foreground">
@@ -71,11 +46,14 @@
         <p class="text-sm text-muted-foreground">
           {{ sensorPointCount }} points
         </p>
-      </div>
+      </CardHeader>
 
-      <VChart class="chart" :option="sensorOption" autoresize />
-    </section>
-  </div>
+      <CardContent class="px-4">
+        <VChart class="chart" :option="sensorOption" autoresize />
+      </CardContent>
+    </Card>
+    </div>
+  </ScrollArea>
 </template>
 
 <script setup lang="ts">

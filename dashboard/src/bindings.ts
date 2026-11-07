@@ -162,14 +162,14 @@ export type SensorFrame = { values: number[]; wavelength: number }
 export type SerialRequest = "Ping" | "NextExperimentPhase" | { RunExperimentPhase: { phase: number } } | "TestSystemHealth" | "SetStateIdle" | "Reset" | "SystemStatus" | "ExperimentStatus" | "HardwareHealth" | "EnvironmentInfo" | "PhotosensorResults" | { SetLedState: { wavelength: number; action: LedAction; brightness: number } }
 export type SerialResponse = "Ping" | { SystemStatus: { fw: number; state: number; uptime: number } } | { ExperimentStatus: { last_state: number; progress: number; elapsed_or_started_at_uptime: number } } | { HardwareHealth: { bipump_current: number; heater_current: number; power_supply_sense: number } } | { EnvironmentInfo: { well_temp: number; ambient_temp: number; ambient_pressure: number; ambient_humidity: number } } | { PhotosensorResults: { wavelength: number; values: number[] } } | { TelecommandAck: { tc_id: number; tc_result: number } } | { Error: { code: number } } | { Unknown: { frame_id: number; payload: number[] } }
 export type SystemStatusFrame = { firmwareVersion: number; state: number; uptimeSeconds: number }
-export type TAURI_CHANNEL<TSend> = null
+export type TAURI_CHANNEL<TSend> = TAURI_API_CHANNEL<TSend>
 export type WellReadingHistoryRow = { capturedAtMs: number; wavelengthNm: number; well1Intensity: number; well2Intensity: number; well3Intensity: number; well4Intensity: number; well5Intensity: number; well6Intensity: number; well7Intensity: number; well8Intensity: number; well9Intensity: number; well10Intensity: number; well11Intensity: number; well12Intensity: number; well13Intensity: number; well14Intensity: number }
 
 /** tauri-specta globals **/
 
 import {
 	invoke as TAURI_INVOKE,
-	Channel as TAURI_CHANNEL,
+	Channel as TAURI_API_CHANNEL,
 } from "@tauri-apps/api/core";
 import * as TAURI_API_EVENT from "@tauri-apps/api/event";
 import { type WebviewWindow as __WebviewWindow__ } from "@tauri-apps/api/webviewWindow";
