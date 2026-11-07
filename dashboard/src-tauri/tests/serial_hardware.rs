@@ -62,6 +62,26 @@ impl SerialSession {
             .send_request(request, REQUEST_TIMEOUT)
             .unwrap_or_else(|error| panic!("device should return the documented response: {error}"))
     }
+
+    fn reset_mock(&self) {
+        assert_ack(self, SerialRequest::Reset, 0x55, 0x00);
+    }
+}
+
+fn assert_ack(device: &SerialSession, request: SerialRequest, tc_id: u8, result: u8) {
+    match device.request(request) {
+        SerialResponse::TelecommandAck {
+            tc_id: actual_id,
+            tc_result,
+        } => {
+            assert_eq!(
+                actual_id, tc_id,
+                "acknowledgement should identify the command"
+            );
+            assert_eq!(tc_result, result, "unexpected telecommand result");
+        }
+        response => panic!("unexpected telecommand response: {response:?}"),
+    }
 }
 
 impl Drop for SerialSession {
@@ -84,6 +104,7 @@ fn ping_route_responds() {
 #[ignore]
 fn system_status_route_responds() {
     let device = SerialSession::connect();
+    device.reset_mock();
     assert!(matches!(
         device.request(SerialRequest::SystemStatus),
         SerialResponse::SystemStatus { .. }
@@ -94,6 +115,7 @@ fn system_status_route_responds() {
 #[ignore]
 fn experiment_status_route_responds() {
     let device = SerialSession::connect();
+    device.reset_mock();
     assert!(matches!(
         device.request(SerialRequest::ExperimentStatus),
         SerialResponse::ExperimentStatus { .. }
@@ -104,6 +126,7 @@ fn experiment_status_route_responds() {
 #[ignore]
 fn hardware_health_route_responds() {
     let device = SerialSession::connect();
+    device.reset_mock();
     assert!(matches!(
         device.request(SerialRequest::HardwareHealth),
         SerialResponse::HardwareHealth { .. }
@@ -114,6 +137,7 @@ fn hardware_health_route_responds() {
 #[ignore]
 fn environment_info_route_responds() {
     let device = SerialSession::connect();
+    device.reset_mock();
     assert!(matches!(
         device.request(SerialRequest::EnvironmentInfo),
         SerialResponse::EnvironmentInfo { .. }
@@ -124,6 +148,7 @@ fn environment_info_route_responds() {
 #[ignore]
 fn photosensor_results_route_returns_all_wells() {
     let device = SerialSession::connect();
+    device.reset_mock();
     match device.request(SerialRequest::PhotosensorResults) {
         SerialResponse::PhotosensorResults { wavelength, values } => {
             assert!(
@@ -140,15 +165,93 @@ fn photosensor_results_route_returns_all_wells() {
 #[ignore]
 fn set_led_state_route_acknowledges() {
     let device = SerialSession::connect();
-    match device.request(SerialRequest::SetLedState {
-        wavelength: 0,
-        action: LedAction::SetBrightness,
-        brightness: 0,
-    }) {
-        SerialResponse::TelecommandAck { tc_id, tc_result } => {
-            assert_eq!(tc_id, 0x03, "acknowledgement should identify Set LED State");
-            assert!(tc_result <= 0x07, "unknown telecommand result: {tc_result}");
-        }
-        response => panic!("unexpected Set LED State response: {response:?}"),
-    }
+    device.reset_mock();
+    assert_ack(
+        &device,
+        SerialRequest::SetLedState {
+            wavelength: 0,
+            action: LedAction::SetBrightness,
+            brightness: 0,
+        },
+        0x03,
+        0x00,
+    );
+}
+
+#[test]
+#[ignore]
+fn led_brightness_changes_photosensor_readings() {
+    let device = SerialSession::connect();
+    device.reset_mock();
+    assert_ack(
+        &device,
+        SerialRequest::SetLedState {
+            wavelength: 0,
+            action: LedAction::SetBrightness,
+            brightness: 255,
+        },
+        0x03,
+        0x00,
+    );
+    let bright = match device.request(SerialRequest::PhotosensorResults) {
+        SerialResponse::PhotosensorResults { values, .. } => values,
+        response => panic!("unexpected photosensor response: {response:?}"),
+    };
+
+    assert_ack(
+        &device,
+        SerialRequest::SetLedState {
+            wavelength: 0,
+            action: LedAction::Off,
+            brightness: 255,
+        },
+        0x03,
+        0x00,
+    );
+    let dark = match device.request(SerialRequest::PhotosensorResults) {
+        SerialResponse::PhotosensorResults { values, .. } => values,
+        response => panic!("unexpected photosensor response: {response:?}"),
+    };
+
+    assert!(bright.iter().max() > dark.iter().max());
+}
+
+#[test]
+#[ignore]
+fn phase_commands_obey_idle_interlock_and_acknowledge() {
+    let device = SerialSession::connect();
+    device.reset_mock();
+    assert_ack(&device, SerialRequest::NextExperimentPhase, 0x01, 0x00);
+    assert_ack(&device, SerialRequest::SetStateIdle, 0x05, 0x00);
+    assert_ack(
+        &device,
+        SerialRequest::RunExperimentPhase { phase: 3 },
+        0x02,
+        0x00,
+    );
+    assert_ack(&device, SerialRequest::NextExperimentPhase, 0x01, 0x01);
+    assert_ack(&device, SerialRequest::SetStateIdle, 0x05, 0x00);
+}
+
+#[test]
+#[ignore]
+fn invalid_phase_returns_unknown_experiment_phase() {
+    let device = SerialSession::connect();
+    device.reset_mock();
+    assert_ack(
+        &device,
+        SerialRequest::RunExperimentPhase { phase: 5 },
+        0x02,
+        0x03,
+    );
+}
+
+#[test]
+#[ignore]
+fn service_commands_acknowledge() {
+    let device = SerialSession::connect();
+    device.reset_mock();
+    assert_ack(&device, SerialRequest::TestSystemHealth, 0x04, 0x00);
+    assert_ack(&device, SerialRequest::SetStateIdle, 0x05, 0x00);
+    assert_ack(&device, SerialRequest::Reset, 0x55, 0x00);
 }

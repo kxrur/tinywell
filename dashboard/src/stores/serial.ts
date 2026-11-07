@@ -1,6 +1,11 @@
 import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
-import { commands, type ConnectionStatus, type Result } from '@/bindings'
+import {
+  commands,
+  type ConnectionStatus,
+  type Result,
+  type SerialResponse,
+} from '@/bindings'
 
 const DEFAULT_SERIAL_PORT = '/dev/ttyUSB0'
 
@@ -90,6 +95,7 @@ export const useSerialStore = defineStore('serial', () => {
         'Failed to connect to the serial device',
       )
       await refreshStatus()
+      await waitForDeviceReady()
     })()
 
     try {
@@ -105,6 +111,28 @@ export const useSerialStore = defineStore('serial', () => {
       'Failed to disconnect from the serial device',
     )
     await refreshStatus()
+  }
+
+  async function waitForDeviceReady(): Promise<void> {
+    let lastError = 'No ping response received'
+    for (let attempt = 0; attempt < 15; attempt += 1) {
+      try {
+        const response: SerialResponse = unwrapResult(
+          await commands.serialSend('Ping', 250),
+          'Failed to ping the serial device',
+        )
+        if (response === 'Ping') {
+          return
+        }
+        lastError = `Unexpected Ping response: ${JSON.stringify(response)}`
+      } catch (error) {
+        lastError = error instanceof Error ? error.message : 'Ping failed'
+      }
+      await new Promise(resolve => window.setTimeout(resolve, 100))
+    }
+    throw new Error(
+      `Connected, but the device did not respond to Ping: ${lastError}`,
+    )
   }
 
   function unwrapCommandResult<T>(

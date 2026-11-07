@@ -11,7 +11,12 @@ pub const FRAME_EXPERIMENT_STATUS: u8 = 0x81;
 pub const FRAME_HARDWARE_HEALTH: u8 = 0x82;
 pub const FRAME_ENVIRONMENT_INFO: u8 = 0x83;
 pub const FRAME_PHOTOSENSOR_RESULTS: u8 = 0x84;
+pub const FRAME_NEXT_EXPERIMENT_PHASE: u8 = 0x01;
+pub const FRAME_RUN_EXPERIMENT_PHASE: u8 = 0x02;
 pub const FRAME_SET_LED_STATE: u8 = 0x03;
+pub const FRAME_TEST_SYSTEM_HEALTH: u8 = 0x04;
+pub const FRAME_SET_STATE_IDLE: u8 = 0x05;
+pub const FRAME_RESET: u8 = 0x55;
 pub const FRAME_TELECOMMAND_ACK: u8 = 0x85;
 
 #[derive(Debug, Clone)]
@@ -42,6 +47,13 @@ impl LedAction {
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub enum SerialRequest {
     Ping,
+    NextExperimentPhase,
+    RunExperimentPhase {
+        phase: u8,
+    },
+    TestSystemHealth,
+    SetStateIdle,
+    Reset,
     SystemStatus,
     ExperimentStatus,
     HardwareHealth,
@@ -68,9 +80,9 @@ pub enum SerialResponse {
         elapsed_or_started_at_uptime: u32,
     },
     HardwareHealth {
-        pump_current: u16,
+        bipump_current: u16,
         heater_current: u16,
-        vref_current: u16,
+        power_supply_sense: u16,
     },
     EnvironmentInfo {
         well_temp: u16,
@@ -130,6 +142,11 @@ pub fn expected_payload_len(frame_id: u8) -> Option<usize> {
 pub fn request_frame(request: &SerialRequest) -> (u8, Vec<u8>) {
     match request {
         SerialRequest::Ping => (FRAME_PING, Vec::new()),
+        SerialRequest::NextExperimentPhase => (FRAME_NEXT_EXPERIMENT_PHASE, Vec::new()),
+        SerialRequest::RunExperimentPhase { phase } => (FRAME_RUN_EXPERIMENT_PHASE, vec![*phase]),
+        SerialRequest::TestSystemHealth => (FRAME_TEST_SYSTEM_HEALTH, Vec::new()),
+        SerialRequest::SetStateIdle => (FRAME_SET_STATE_IDLE, Vec::new()),
+        SerialRequest::Reset => (FRAME_RESET, Vec::new()),
         SerialRequest::SystemStatus => (FRAME_SYSTEM_STATUS, Vec::new()),
         SerialRequest::ExperimentStatus => (FRAME_EXPERIMENT_STATUS, Vec::new()),
         SerialRequest::HardwareHealth => (FRAME_HARDWARE_HEALTH, Vec::new()),
@@ -181,9 +198,9 @@ pub fn response_from_frame(frame: Frame) -> SerialResponse {
         FRAME_HARDWARE_HEALTH => {
             if frame.payload.len() == 6 {
                 SerialResponse::HardwareHealth {
-                    pump_current: read_u16_le(&frame.payload[0..2]),
+                    bipump_current: read_u16_le(&frame.payload[0..2]),
                     heater_current: read_u16_le(&frame.payload[2..4]),
-                    vref_current: read_u16_le(&frame.payload[4..6]),
+                    power_supply_sense: read_u16_le(&frame.payload[4..6]),
                 }
             } else {
                 SerialResponse::Unknown {
@@ -348,5 +365,64 @@ impl Parser {
         }
 
         frames
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn encodes_all_telecommands_with_spec_ids_and_payloads() {
+        let cases = [
+            (SerialRequest::NextExperimentPhase, 0x01, vec![]),
+            (
+                SerialRequest::RunExperimentPhase { phase: 2 },
+                0x02,
+                vec![2],
+            ),
+            (
+                SerialRequest::SetLedState {
+                    wavelength: 0,
+                    action: LedAction::SetBrightness,
+                    brightness: 128,
+                },
+                0x03,
+                vec![0, 3, 128],
+            ),
+            (SerialRequest::TestSystemHealth, 0x04, vec![]),
+            (SerialRequest::SetStateIdle, 0x05, vec![]),
+            (SerialRequest::Reset, 0x55, vec![]),
+        ];
+
+        for (request, expected_id, expected_payload) in cases {
+            assert_eq!(request_frame(&request), (expected_id, expected_payload));
+        }
+    }
+
+    #[test]
+    fn decodes_hardware_health_with_semantic_field_names() {
+        let response = response_from_frame(Frame {
+            frame_id: FRAME_HARDWARE_HEALTH,
+            payload: vec![0x2C, 0x01, 0x90, 0x01, 0xF4, 0x01],
+        });
+
+        assert!(matches!(
+            response,
+            SerialResponse::HardwareHealth {
+                bipump_current: 300,
+                heater_current: 400,
+                power_supply_sense: 500
+            }
+        ));
+    }
+
+    #[test]
+    fn checksum_and_frame_examples_match_protocol_v2() {
+        assert_eq!(build_frame(0x02, &[2]), vec![0xB3, 0x02, 0x02, 0x04, b'\n']);
+        assert_eq!(
+            build_frame(0x85, &[0x02, 0x03]),
+            vec![0xB3, 0x85, 0x02, 0x03, 0x8A, b'\n']
+        );
     }
 }

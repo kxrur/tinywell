@@ -1,11 +1,7 @@
 import { Channel } from '@tauri-apps/api/core'
 import { defineStore } from 'pinia'
 import { computed, reactive, ref, watch } from 'vue'
-import {
-  commands,
-  type EnvironmentFrame,
-  type SensorFrame,
-} from '@/bindings'
+import { commands, type EnvironmentFrame, type SensorFrame } from '@/bindings'
 import { useSerialStore } from '@/stores/serial'
 
 type HistoryPoint = [number, number]
@@ -47,6 +43,7 @@ export const useHistoryStore = defineStore('history', () => {
   const latestEnvironmentFrame = ref<EnvironmentFrame | null>(null)
   const latestEnvironmentReceivedAt = ref<number | null>(null)
   const latestSensorFrame = ref<SensorFrame | null>(null)
+  const latestSensorReceivedAt = ref<number | null>(null)
 
   const environmentHistory = reactive({
     wellTempC: [] as HistoryPoint[],
@@ -86,6 +83,7 @@ export const useHistoryStore = defineStore('history', () => {
         latestSensorWavelength.value = frame.wavelength
 
         const timestamp = Date.now()
+        latestSensorReceivedAt.value = timestamp
         frame.values.slice(0, SENSOR_COUNT).forEach((value, index) => {
           appendPoint(sensorHistory[index], [timestamp, value])
         })
@@ -104,7 +102,7 @@ export const useHistoryStore = defineStore('history', () => {
         ])
         appendPoint(environmentHistory.ambientPressureHpa, [
           timestamp,
-          frame.ambientPressureRaw / 100,
+          frame.ambientPressureRaw / 25600,
         ])
         appendPoint(environmentHistory.ambientHumidityPct, [
           timestamp,
@@ -128,7 +126,9 @@ export const useHistoryStore = defineStore('history', () => {
       await startPromise.value
     } catch (error) {
       streamError.value =
-        error instanceof Error ? error.message : 'Failed to start telemetry stream'
+        error instanceof Error
+          ? error.message
+          : 'Failed to start telemetry stream'
       throw error
     } finally {
       startPromise.value = null
@@ -174,11 +174,20 @@ export const useHistoryStore = defineStore('history', () => {
       })
       result.data.readings.forEach(row => {
         const values = [
-          row.well1Intensity, row.well2Intensity, row.well3Intensity,
-          row.well4Intensity, row.well5Intensity, row.well6Intensity,
-          row.well7Intensity, row.well8Intensity, row.well9Intensity,
-          row.well10Intensity, row.well11Intensity, row.well12Intensity,
-          row.well13Intensity, row.well14Intensity,
+          row.well1Intensity,
+          row.well2Intensity,
+          row.well3Intensity,
+          row.well4Intensity,
+          row.well5Intensity,
+          row.well6Intensity,
+          row.well7Intensity,
+          row.well8Intensity,
+          row.well9Intensity,
+          row.well10Intensity,
+          row.well11Intensity,
+          row.well12Intensity,
+          row.well13Intensity,
+          row.well14Intensity,
         ]
         values.forEach((value, index) => {
           appendPoint(sensorHistory[index], [row.capturedAtMs, value])
@@ -191,7 +200,9 @@ export const useHistoryStore = defineStore('history', () => {
       await loadPromise.value
     } catch (error) {
       streamError.value =
-        error instanceof Error ? error.message : 'Failed to load experiment history'
+        error instanceof Error
+          ? error.message
+          : 'Failed to load experiment history'
       throw error
     } finally {
       loadPromise.value = null
@@ -207,6 +218,7 @@ export const useHistoryStore = defineStore('history', () => {
     latestEnvironmentFrame.value = null
     latestEnvironmentReceivedAt.value = null
     latestSensorFrame.value = null
+    latestSensorReceivedAt.value = null
     latestSensorWavelength.value = null
     loadedExperimentId.value = null
   }
@@ -216,11 +228,14 @@ export const useHistoryStore = defineStore('history', () => {
     startPromise.value = null
   }
 
-  watch(() => serialStore.isConnected, isConnected => {
-    if (!isConnected) {
-      stopStreaming()
-    }
-  })
+  watch(
+    () => serialStore.isConnected,
+    isConnected => {
+      if (!isConnected) {
+        stopStreaming()
+      }
+    },
+  )
 
   return {
     clearHistory,
@@ -230,6 +245,7 @@ export const useHistoryStore = defineStore('history', () => {
     latestEnvironmentFrame,
     latestEnvironmentReceivedAt,
     latestSensorFrame,
+    latestSensorReceivedAt,
     latestSensorWavelength,
     loadExperimentHistory,
     sensorHistory,

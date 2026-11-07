@@ -127,6 +127,14 @@ async subscribeEnvironmentFrames(channel: TAURI_CHANNEL<EnvironmentFrame>) : Pro
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
 }
+},
+async subscribeInstrumentFrames(channel: TAURI_CHANNEL<InstrumentFrame>) : Promise<Result<null, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("subscribe_instrument_frames", { channel }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
 }
 }
 
@@ -144,12 +152,16 @@ export type ConnectionStatus = "Disconnected" | "Connecting" | { Connected: { po
 export type EnvironmentFrame = { wellTempC: number; ambientTempRaw: number; ambientPressureRaw: number; ambientHumidityRaw: number }
 export type EnvironmentHistoryRow = { capturedAtMs: number; wellTemperatureC: number; ambientTemperatureC: number; ambientPressurePa: number; ambientHumidityPct: number }
 export type Experiment = { id: number | null; name: string }
+export type ExperimentStatusFrame = { lastState: number; progress: number; elapsedOrStartedAtUptime: number }
 export type ExportSummary = { experimentsExported: number; filesWritten: number }
+export type HardwareHealthFrame = { bipumpCurrent: number; heaterCurrent: number; powerSupplySense: number }
 export type HistorySnapshot = { environment: EnvironmentHistoryRow[]; readings: WellReadingHistoryRow[] }
+export type InstrumentFrame = { systemStatus: SystemStatusFrame | null; experimentStatus: ExperimentStatusFrame | null; hardwareHealth: HardwareHealthFrame | null; lastError: string | null }
 export type LedAction = "Off" | "On" | "Toggle" | "SetBrightness"
 export type SensorFrame = { values: number[]; wavelength: number }
-export type SerialRequest = "Ping" | "SystemStatus" | "ExperimentStatus" | "HardwareHealth" | "EnvironmentInfo" | "PhotosensorResults" | { SetLedState: { wavelength: number; action: LedAction; brightness: number } }
-export type SerialResponse = "Ping" | { SystemStatus: { fw: number; state: number; uptime: number } } | { ExperimentStatus: { last_state: number; progress: number; elapsed_or_started_at_uptime: number } } | { HardwareHealth: { pump_current: number; heater_current: number; vref_current: number } } | { EnvironmentInfo: { well_temp: number; ambient_temp: number; ambient_pressure: number; ambient_humidity: number } } | { PhotosensorResults: { wavelength: number; values: number[] } } | { TelecommandAck: { tc_id: number; tc_result: number } } | { Error: { code: number } } | { Unknown: { frame_id: number; payload: number[] } }
+export type SerialRequest = "Ping" | "NextExperimentPhase" | { RunExperimentPhase: { phase: number } } | "TestSystemHealth" | "SetStateIdle" | "Reset" | "SystemStatus" | "ExperimentStatus" | "HardwareHealth" | "EnvironmentInfo" | "PhotosensorResults" | { SetLedState: { wavelength: number; action: LedAction; brightness: number } }
+export type SerialResponse = "Ping" | { SystemStatus: { fw: number; state: number; uptime: number } } | { ExperimentStatus: { last_state: number; progress: number; elapsed_or_started_at_uptime: number } } | { HardwareHealth: { bipump_current: number; heater_current: number; power_supply_sense: number } } | { EnvironmentInfo: { well_temp: number; ambient_temp: number; ambient_pressure: number; ambient_humidity: number } } | { PhotosensorResults: { wavelength: number; values: number[] } } | { TelecommandAck: { tc_id: number; tc_result: number } } | { Error: { code: number } } | { Unknown: { frame_id: number; payload: number[] } }
+export type SystemStatusFrame = { firmwareVersion: number; state: number; uptimeSeconds: number }
 export type TAURI_CHANNEL<TSend> = null
 export type WellReadingHistoryRow = { capturedAtMs: number; wavelengthNm: number; well1Intensity: number; well2Intensity: number; well3Intensity: number; well4Intensity: number; well5Intensity: number; well6Intensity: number; well7Intensity: number; well8Intensity: number; well9Intensity: number; well10Intensity: number; well11Intensity: number; well12Intensity: number; well13Intensity: number; well14Intensity: number }
 

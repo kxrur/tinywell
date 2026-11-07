@@ -5,7 +5,10 @@ use crate::database::data::{well_data::store_data, well_reading::store_reading};
 use crate::database::new_models::{NewData, NewWellReading};
 use crate::serial::{SerialManager, SerialRequest, SerialResponse};
 use crate::state::AppState;
-use crate::telemetry::{EnvironmentFrame, SensorFrame};
+use crate::telemetry::{
+    EnvironmentFrame, ExperimentStatusFrame, HardwareHealthFrame, InstrumentFrame, SensorFrame,
+    SystemStatusFrame,
+};
 use log::{info, warn};
 use tauri::ipc::Channel;
 use tauri::{AppHandle, Manager};
@@ -14,6 +17,7 @@ use tauri::{AppHandle, Manager};
 pub struct TelemetryManager {
     sensor: Mutex<TelemetrySubscribers<SensorFrame>>,
     environment: Mutex<TelemetrySubscribers<EnvironmentFrame>>,
+    instrument: Mutex<TelemetrySubscribers<InstrumentFrame>>,
 }
 
 struct TelemetrySubscribers<T> {
@@ -83,9 +87,33 @@ impl TelemetryManager {
         }
     }
 
+    pub fn subscribe_instrument(
+        self: &Arc<Self>,
+        channel: Channel<InstrumentFrame>,
+        serial: Arc<SerialManager>,
+    ) {
+        let generation = {
+            let mut subscribers = self.instrument.lock().expect("instrument telemetry lock");
+            subscribers.channels.push(channel);
+            if subscribers.worker_started {
+                None
+            } else {
+                subscribers.worker_started = true;
+                subscribers.generation += 1;
+                Some(subscribers.generation)
+            }
+        };
+
+        if let Some(generation) = generation {
+            let telemetry = Arc::clone(self);
+            std::thread::spawn(move || instrument_worker(serial, telemetry, generation));
+        }
+    }
+
     pub fn stop(&self) {
         stop_subscribers(&self.sensor, "photosensor");
         stop_subscribers(&self.environment, "environment");
+        stop_subscribers(&self.instrument, "instrument status");
     }
 
     fn sensor_worker_active(&self, generation: u64) -> bool {
@@ -94,6 +122,10 @@ impl TelemetryManager {
 
     fn environment_worker_active(&self, generation: u64) -> bool {
         worker_active(&self.environment, generation)
+    }
+
+    fn instrument_worker_active(&self, generation: u64) -> bool {
+        worker_active(&self.instrument, generation)
     }
 
     fn broadcast_sensor(&self, frame: &SensorFrame) {
@@ -105,6 +137,13 @@ impl TelemetryManager {
 
     fn broadcast_environment(&self, frame: &EnvironmentFrame) {
         let mut subscribers = self.environment.lock().expect("environment telemetry lock");
+        subscribers
+            .channels
+            .retain(|channel| channel.send(frame.clone()).is_ok());
+    }
+
+    fn broadcast_instrument(&self, frame: &InstrumentFrame) {
+        let mut subscribers = self.instrument.lock().expect("instrument telemetry lock");
         subscribers
             .channels
             .retain(|channel| channel.send(frame.clone()).is_ok());
@@ -197,6 +236,91 @@ fn environment_worker(
     info!("Shared environment telemetry worker exited");
 }
 
+fn instrument_worker(
+    serial: Arc<SerialManager>,
+    telemetry: Arc<TelemetryManager>,
+    generation: u64,
+) {
+    info!("Shared instrument status telemetry worker started");
+    let mut latest = InstrumentFrame::default();
+
+    while telemetry.instrument_worker_active(generation) {
+        latest.last_error = None;
+
+        match serial.send_request(SerialRequest::SystemStatus, Duration::from_millis(1500)) {
+            Ok(SerialResponse::SystemStatus { fw, state, uptime }) => {
+                latest.system_status = Some(SystemStatusFrame {
+                    firmware_version: fw,
+                    state,
+                    uptime_seconds: uptime,
+                });
+            }
+            Ok(other) => {
+                latest.last_error = Some(format!("Unexpected system status response: {other:?}"));
+            }
+            Err(err) => latest.last_error = Some(format!("System status request failed: {err}")),
+        }
+
+        if !telemetry.instrument_worker_active(generation) {
+            break;
+        }
+
+        match serial.send_request(SerialRequest::ExperimentStatus, Duration::from_millis(1500)) {
+            Ok(SerialResponse::ExperimentStatus {
+                last_state,
+                progress,
+                elapsed_or_started_at_uptime,
+            }) => {
+                latest.experiment_status = Some(ExperimentStatusFrame {
+                    last_state,
+                    progress,
+                    elapsed_or_started_at_uptime,
+                });
+            }
+            Ok(other) => {
+                latest.last_error =
+                    Some(format!("Unexpected experiment status response: {other:?}"));
+            }
+            Err(err) => {
+                latest.last_error = Some(format!("Experiment status request failed: {err}"));
+            }
+        }
+
+        if !telemetry.instrument_worker_active(generation) {
+            break;
+        }
+
+        match serial.send_request(SerialRequest::HardwareHealth, Duration::from_millis(1500)) {
+            Ok(SerialResponse::HardwareHealth {
+                bipump_current,
+                heater_current,
+                power_supply_sense,
+            }) => {
+                latest.hardware_health = Some(HardwareHealthFrame {
+                    bipump_current,
+                    heater_current,
+                    power_supply_sense,
+                });
+            }
+            Ok(other) => {
+                latest.last_error = Some(format!("Unexpected hardware health response: {other:?}"));
+            }
+            Err(err) => {
+                latest.last_error = Some(format!("Hardware health request failed: {err}"));
+            }
+        }
+
+        if !telemetry.instrument_worker_active(generation) {
+            break;
+        }
+
+        telemetry.broadcast_instrument(&latest);
+        std::thread::sleep(Duration::from_secs(1));
+    }
+
+    info!("Shared instrument status telemetry worker exited");
+}
+
 fn persist_environment_frame(
     app_handle: &AppHandle,
     frame: &EnvironmentFrame,
@@ -216,7 +340,7 @@ fn persist_environment_frame(
             captured_at_ms: captured_at_ms()?,
             well_temperature_c: frame.well_temp_c as f32,
             ambient_temperature_c: frame.ambient_temp_raw as f32 / 100.0,
-            ambient_pressure_pa: frame.ambient_pressure_raw as f32,
+            ambient_pressure_pa: frame.ambient_pressure_raw as f32 / 256.0,
             ambient_humidity_pct: frame.ambient_humidity_raw as f32 / 1024.0,
         },
     )

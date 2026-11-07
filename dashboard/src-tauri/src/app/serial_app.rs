@@ -3,7 +3,7 @@ use std::time::Duration;
 
 use crate::serial::{ConnectionStatus, SerialManager, SerialRequest, SerialResponse};
 use crate::state::AppState;
-use crate::telemetry::{EnvironmentFrame, SensorFrame};
+use crate::telemetry::{EnvironmentFrame, InstrumentFrame, SensorFrame};
 use log::{debug, info};
 use tauri::ipc::Channel;
 use tauri::AppHandle;
@@ -120,6 +120,23 @@ pub fn subscribe_environment_frames(
         app.telemetry.clone()
     };
     telemetry.subscribe_environment(channel, serial, app_handle);
+
+    Ok(())
+}
+
+#[tauri::command]
+#[specta::specta]
+pub fn subscribe_instrument_frames(
+    state: tauri::State<'_, Mutex<AppState>>,
+    channel: Channel<InstrumentFrame>,
+) -> Result<(), String> {
+    let (serial, telemetry) = {
+        let app = state
+            .lock()
+            .map_err(|_| "State lock poisoned".to_string())?;
+        (app.serial.clone(), app.telemetry.clone())
+    };
+    telemetry.subscribe_instrument(channel, serial);
 
     Ok(())
 }

@@ -1,4 +1,3 @@
-use std::io::{Read, Write};
 use std::sync::mpsc::{self, Receiver, Sender};
 use std::thread;
 use std::time::{Duration, Instant};
@@ -9,7 +8,9 @@ use super::errors::SerialError;
 use super::protocol::{
     build_frame, request_frame, response_from_frame, Parser, SerialRequest, SerialResponse,
     FRAME_ENVIRONMENT_INFO, FRAME_ERROR, FRAME_EXPERIMENT_STATUS, FRAME_HARDWARE_HEALTH,
-    FRAME_PHOTOSENSOR_RESULTS, FRAME_PING, FRAME_SYSTEM_STATUS, FRAME_TELECOMMAND_ACK,
+    FRAME_NEXT_EXPERIMENT_PHASE, FRAME_PHOTOSENSOR_RESULTS, FRAME_PING, FRAME_RESET,
+    FRAME_RUN_EXPERIMENT_PHASE, FRAME_SET_LED_STATE, FRAME_SET_STATE_IDLE, FRAME_SYSTEM_STATUS,
+    FRAME_TELECOMMAND_ACK, FRAME_TEST_SYSTEM_HEALTH,
 };
 use log::{debug, error, info};
 
@@ -132,6 +133,13 @@ fn handle_request(
                     }
                     if frame.frame_id == expected_response {
                         let response = response_from_frame(frame);
+                        if let SerialResponse::TelecommandAck { tc_id, .. } = &response {
+                            if Some(*tc_id) != expected_telecommand_id(&envelope.request) {
+                                return Err(SerialError::Protocol(format!(
+                                    "Acknowledgement command ID 0x{tc_id:02X} did not match request"
+                                )));
+                            }
+                        }
                         debug!("Serial response matched");
                         return match response {
                             SerialResponse::Unknown { .. } => Err(SerialError::Protocol(
@@ -155,11 +163,28 @@ fn handle_request(
 fn expected_response_id(request: &SerialRequest) -> u8 {
     match request {
         SerialRequest::Ping => FRAME_PING,
+        SerialRequest::NextExperimentPhase
+        | SerialRequest::RunExperimentPhase { .. }
+        | SerialRequest::TestSystemHealth
+        | SerialRequest::SetStateIdle
+        | SerialRequest::Reset
+        | SerialRequest::SetLedState { .. } => FRAME_TELECOMMAND_ACK,
         SerialRequest::SystemStatus => FRAME_SYSTEM_STATUS,
         SerialRequest::ExperimentStatus => FRAME_EXPERIMENT_STATUS,
         SerialRequest::HardwareHealth => FRAME_HARDWARE_HEALTH,
         SerialRequest::EnvironmentInfo => FRAME_ENVIRONMENT_INFO,
         SerialRequest::PhotosensorResults => FRAME_PHOTOSENSOR_RESULTS,
-        SerialRequest::SetLedState { .. } => FRAME_TELECOMMAND_ACK,
+    }
+}
+
+fn expected_telecommand_id(request: &SerialRequest) -> Option<u8> {
+    match request {
+        SerialRequest::NextExperimentPhase => Some(FRAME_NEXT_EXPERIMENT_PHASE),
+        SerialRequest::RunExperimentPhase { .. } => Some(FRAME_RUN_EXPERIMENT_PHASE),
+        SerialRequest::SetLedState { .. } => Some(FRAME_SET_LED_STATE),
+        SerialRequest::TestSystemHealth => Some(FRAME_TEST_SYSTEM_HEALTH),
+        SerialRequest::SetStateIdle => Some(FRAME_SET_STATE_IDLE),
+        SerialRequest::Reset => Some(FRAME_RESET),
+        _ => None,
     }
 }
